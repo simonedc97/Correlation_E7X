@@ -544,10 +544,13 @@ with tab_exposure:
 
         output = BytesIO()
         comp.to_excel(output, index=False)
+        output.seek(0)   # <-- QUESTO MANCAVA
+        
         st.download_button(
-            f"📥 Download {selected_portfolio} vs Bucket Exposure as Excel",
-            output.getvalue(),
-            f"{selected_portfolio}_vs_bucket_exposure.xlsx"
+            label=f"📥 Download {selected_portfolio} vs Bucket Exposure as Excel",
+            data=output,
+            file_name=f"{selected_portfolio}_vs_bucket_exposure.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 # ==================================================
 # TAB — LEGENDA
