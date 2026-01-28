@@ -432,7 +432,7 @@ with tab_legenda:
     st.title("E7X Dynamic Asset Allocation vs Funds")
 
     st.subheader("Series")
-    st.dataframe(load_legenda("E7X", "A:C"), hide_index=True)
+    st.dataframe(load_legenda("E7X", "A:B"), hide_index=True)
 
     st.subheader("Stress Scenarios")
     st.dataframe(load_legenda("Scenari", "A:B"), hide_index=True)
