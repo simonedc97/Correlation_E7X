@@ -400,7 +400,7 @@ with tab_exposure:
         x=comp["bucket_median"],
         y=comp["Metric"],
         mode="markers",
-        name="Bucket median"
+        name="Bucket median",
         marker=dict(
         color="blue",
         size=10,
