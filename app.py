@@ -77,12 +77,12 @@ def load_name_map():
     legenda = load_legenda("E7X", "A:C")
     return dict(zip(legenda["Ticker"], legenda["Name"]))
 
+
 NAME_MAP = load_name_map()
 
 
-def pretty_name(ticker):
-    """Fallback automatico: se non esiste in legenda → ticker"""
-    return NAME_MAP.get(ticker, ticker)
+def pretty_name(x):
+    return NAME_MAP.get(x, x)
 
 
 # ==================================================
@@ -98,20 +98,24 @@ exposure_data = load_exposure_data("E7X_Exposure.xlsx")
 with tab_corr:
     st.title("Dynamic Asset Allocation vs Funds")
 
-    col_ctrl, col_plot = st.columns([1, 4])
+    # ⬅️ Controls più strette
+    col_ctrl, col_plot = st.columns([0.7, 4.3])
 
     with col_ctrl:
         st.subheader("Controls")
+
         start, end = st.date_input(
             "Date range",
             (corr.index.min().date(), corr.index.max().date())
         )
+
         df = corr.loc[pd.to_datetime(start):pd.to_datetime(end)]
 
         selected = st.multiselect(
             "Select series",
-            df.columns.tolist(),
-            default=df.columns.tolist()
+            options=df.columns.tolist(),
+            default=df.columns.tolist(),
+            format_func=pretty_name
         )
 
     with col_plot:
@@ -136,7 +140,7 @@ with tab_corr:
         )
         st.plotly_chart(fig, use_container_width=True)
 
-        # Download time series
+        # Download
         output = BytesIO()
         (df[selected] * 100).to_excel(output)
         st.download_button(
@@ -154,19 +158,19 @@ with tab_corr:
         snapshot = df.loc[snapshot_date, selected]
         mean_corr = df[selected].mean()
 
-        theta_names = [pretty_name(c) for c in snapshot.index]
+        theta = [pretty_name(c) for c in selected]
 
         fig_radar = go.Figure()
         fig_radar.add_trace(go.Scatterpolar(
             r=snapshot.values * 100,
-            theta=theta_names,
+            theta=theta,
             name=f"End date ({snapshot_date.date()})",
             line=dict(width=3)
         ))
 
         fig_radar.add_trace(go.Scatterpolar(
             r=mean_corr.values * 100,
-            theta=theta_names,
+            theta=theta,
             name="Period mean",
             line=dict(dash="dot")
         ))
@@ -197,8 +201,6 @@ with tab_corr:
             index=selected
         )
 
-        stats.index.name = "Ticker"
-
         st.dataframe(
             stats.reset_index(drop=True).style.format({
                 "Mean (%)": "{:.2f}%",
@@ -208,39 +210,37 @@ with tab_corr:
             use_container_width=True
         )
 
-        output = BytesIO()
-        stats.to_excel(output)
-        st.download_button(
-            "📥 Download summary statistics",
-            output.getvalue(),
-            "correlation_summary.xlsx"
-        )
-
 # ==================================================
 # TAB — STRESS TEST
 # ==================================================
 with tab_stress:
     st.title("Dynamic Asset Allocation vs Funds")
 
-    col_ctrl, col_plot = st.columns([1, 4])
+    col_ctrl, col_plot = st.columns([0.7, 4.3])
 
     with col_ctrl:
         st.subheader("Controls")
+
         dates = sorted(stress_data["Date"].unique())
-        date = pd.to_datetime(st.selectbox(
-            "Select date",
-            [d.strftime("%Y/%m/%d") for d in dates],
-            index=len(dates)-1
-        ))
+        date = pd.to_datetime(
+            st.selectbox(
+                "Select date",
+                [d.strftime("%Y/%m/%d") for d in dates],
+                index=len(dates) - 1
+            )
+        )
 
         df = stress_data[stress_data["Date"] == date]
 
         portfolios = df["Portfolio"].unique().tolist()
+
         sel_ports = st.multiselect(
             "Select portfolios",
-            portfolios,
-            default=portfolios
+            options=portfolios,
+            default=portfolios,
+            format_func=pretty_name
         )
+
         df = df[df["Portfolio"].isin(sel_ports)]
 
         scenarios = df["ScenarioName"].unique().tolist()
@@ -249,10 +249,12 @@ with tab_stress:
             scenarios,
             default=scenarios
         )
+
         df = df[df["ScenarioName"].isin(sel_scen)]
 
     with col_plot:
         fig = go.Figure()
+
         for p in sel_ports:
             d = df[df["Portfolio"] == p]
             fig.add_trace(go.Bar(
@@ -267,6 +269,7 @@ with tab_stress:
             template="plotly_white",
             yaxis_title="Stress PnL (bps)"
         )
+
         st.plotly_chart(fig, use_container_width=True)
 
 # ==================================================
@@ -275,29 +278,39 @@ with tab_stress:
 with tab_exposure:
     st.title("Dynamic Asset Allocation vs Funds")
 
-    col_ctrl, col_plot = st.columns([1, 4])
+    col_ctrl, col_plot = st.columns([0.7, 4.3])
 
     with col_ctrl:
         st.subheader("Controls")
+
         dates = sorted(exposure_data["Date"].unique())
-        date = pd.to_datetime(st.selectbox(
-            "Select date",
-            [d.strftime("%Y/%m/%d") for d in dates],
-            index=len(dates)-1
-        ))
+        date = pd.to_datetime(
+            st.selectbox(
+                "Select date",
+                [d.strftime("%Y/%m/%d") for d in dates],
+                index=len(dates) - 1
+            )
+        )
 
         df = exposure_data[exposure_data["Date"] == date]
 
         ports = df["Portfolio"].unique().tolist()
-        sel_ports = st.multiselect("Select portfolios", ports, default=ports)
+
+        sel_ports = st.multiselect(
+            "Select portfolios",
+            ports,
+            default=ports,
+            format_func=pretty_name
+        )
+
         df = df[df["Portfolio"].isin(sel_ports)]
 
         metrics = ["Equity Exposure", "Duration", "Spread Duration"]
 
     with col_plot:
         df_plot = df.melt("Portfolio", metrics, "Metric", "Value")
-        fig = go.Figure()
 
+        fig = go.Figure()
         for p in sel_ports:
             d = df_plot[df_plot["Portfolio"] == p]
             fig.add_trace(go.Bar(
@@ -311,6 +324,7 @@ with tab_exposure:
             height=600,
             template="plotly_white"
         )
+
         st.plotly_chart(fig, use_container_width=True)
 
 # ==================================================
@@ -319,5 +333,6 @@ with tab_exposure:
 with tab_legenda:
     st.subheader("Series")
     st.dataframe(load_legenda("E7X", "A:B"), hide_index=True)
+
     st.subheader("Stress Scenarios")
     st.dataframe(load_legenda("Scenari", "A:C"), hide_index=True)
