@@ -304,6 +304,8 @@ with tab_stress:
             yaxis_title="Stress PnL (bps)"
         )
 
+        st.plotly_chart(fig, use_container_width=True)
+
         output = BytesIO()
         with pd.ExcelWriter(output, engine="openpyxl") as writer:
             df.to_excel(writer, sheet_name="Stress Test PnL", index=False)
@@ -316,31 +318,30 @@ with tab_stress:
             key="download_stress_pnl"
         )
         
-
-        st.plotly_chart(fig, use_container_width=True)
         
-        # Select per drill-down del portfolio
-        clicked_portfolio = st.selectbox(
-            "Apri grafico dettagliato per portfolio",
-            sel_ports,
-            format_func=pretty_name
-        )
+        # Drill-down per portfolio + scenario + grafico dentro un expander
+        with st.expander("Open for Strategy Analysis", expanded=False):
+            
+            # Select per drill-down del portfolio
+            clicked_portfolio = st.selectbox(
+                "Apri grafico dettagliato per portfolio",
+                sel_ports,
+                format_func=pretty_name
+            )
+            
+            # Select per scenario
+            clicked_scenario = st.selectbox(
+                "Scenario",
+                sel_scen
+            )
+            
+            # Mostra grafico drill-down solo se entrambi selezionati
+            df_detail = stress_data[
+                (stress_data["Portfolio"] == clicked_portfolio) &
+                (stress_data["ScenarioName"] == clicked_scenario)
+            ].sort_values("Date")
         
-        # Select per scenario
-        clicked_scenario = st.selectbox(
-            "Scenario",
-            sel_scen
-        )
-        
-        # Mostra grafico drill-down solo se entrambi selezionati
-        df_detail = stress_data[
-            (stress_data["Portfolio"] == clicked_portfolio) &
-            (stress_data["ScenarioName"] == clicked_scenario)
-        ].sort_values("Date")
-
-        if not df_detail.empty:
-            # Qui mettiamo lo st.expander
-            with st.expander("Open for Strategy Analysis", expanded=False):
+            if not df_detail.empty:
                 fig_detail = go.Figure()
                 fig_detail.add_trace(go.Scatter(
                     x=df_detail["Date"],
