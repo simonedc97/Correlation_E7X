@@ -188,7 +188,7 @@ with tab_corr:
 # TAB — STRESS TEST
 # ==================================================
 with tab_stress:
-    st.title("E7X Dynamic Asset Allocation vs Funds")
+    st.title("Dynamic Asset Allocation vs Funds")
 
     col_ctrl, col_plot = st.columns([1, 4])
 
@@ -327,7 +327,7 @@ with tab_stress:
 # TAB — EXPOSURE
 # ==================================================
 with tab_exposure:
-    st.title("E7X Dynamic Asset Allocation vs Funds")
+    st.title("Dynamic Asset Allocation vs Funds")
 
     col_ctrl, col_plot = st.columns([1, 4])
 
@@ -456,7 +456,6 @@ with tab_exposure:
 # TAB — LEGENDA
 # ==================================================
 with tab_legenda:
-    st.title("E7X Dynamic Asset Allocation vs Funds")
     st.subheader("Series")
     st.dataframe(load_legenda("E7X", "A:B"), hide_index=True)
     st.subheader("Stress Scenarios")
