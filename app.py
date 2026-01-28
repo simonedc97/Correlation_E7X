@@ -318,6 +318,25 @@ with tab_stress:
         
 
         st.plotly_chart(fig, use_container_width=True)
+        
+        # Select per drill-down del portfolio
+        clicked_portfolio = st.selectbox(
+            sel_ports,
+            format_func=pretty_name
+        )
+        
+        # Select per scenario
+        clicked_scenario = st.selectbox(
+            "Scenario",
+            sel_scen
+        )
+        
+        # Mostra grafico drill-down solo se entrambi selezionati
+        df_detail = stress_data[
+            (stress_data["Portfolio"] == clicked_portfolio) &
+            (stress_data["ScenarioName"] == clicked_scenario)
+        ].sort_values("Date")
+
         if not df_detail.empty:
             # Qui mettiamo lo st.expander
             with st.expander("Open for Strategy Analysis", expanded=False):
@@ -337,25 +356,6 @@ with tab_stress:
                 )
         
                 st.plotly_chart(fig_detail, use_container_width=True)
-        
-        # Select per drill-down del portfolio
-        clicked_portfolio = st.selectbox(
-            sel_ports,
-            format_func=pretty_name
-        )
-        
-        # Select per scenario
-        clicked_scenario = st.selectbox(
-            "Scenario",
-            sel_scen
-        )
-        
-        # Mostra grafico drill-down solo se entrambi selezionati
-        df_detail = stress_data[
-            (stress_data["Portfolio"] == clicked_portfolio) &
-            (stress_data["ScenarioName"] == clicked_scenario)
-        ].sort_values("Date")
-        
 
 
         
