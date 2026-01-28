@@ -88,7 +88,7 @@ def pretty_name(x):
 # ==================================================
 # LOAD DATA
 # ==================================================
-corr = load_corr_data("corrE7X_test.xlsx")
+corr = load_corr_data("corrE7X.xlsx")
 stress_data = load_stress_data("stress_test_totE7X.xlsx")
 exposure_data = load_exposure_data("E7X_Exposure.xlsx")
 
