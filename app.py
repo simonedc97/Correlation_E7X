@@ -321,6 +321,7 @@ with tab_stress:
         
         # Select per drill-down del portfolio
         clicked_portfolio = st.selectbox(
+            "Apri grafico dettagliato per portfolio",
             sel_ports,
             format_func=pretty_name
         )
