@@ -454,20 +454,16 @@ with tab_exposure:
         df_download = df_plot[df_plot["Portfolio"].isin(sel_ports)].copy()
 
         output = BytesIO()
-        with pd.ExcelWriter(output, engine="openpyxl") as writer:
-            df_download.to_excel(
-                writer,
-                sheet_name="Metrics Comparison",
-                index=False
-            )
-    
-            st.download_button(
-                label="📥 Download Exposures as Excel",
-                data=output.getvalue(),
-                file_name="metrics_comparison.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                key="download_metrics_comparison"
-            )
+        comp.to_excel(output, index=False)
+        output.seek(0)   # <-- QUESTO MANCAVA
+        
+        st.download_button(
+            label=f"📥 Download {selected_portfolio} vs Bucket Exposure as Excel",
+            data=output,
+            file_name=f"{selected_portfolio}_vs_bucket_exposure.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
         # ------------------------------
         # Comparison Analysis
         # ------------------------------
