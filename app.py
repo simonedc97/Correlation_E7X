@@ -158,11 +158,11 @@ with tab_corr:
         st.plotly_chart(fig_radar, use_container_width=True)
 
         # Summary stats
-        legenda = load_legenda("E7X", "A:C")
-        name_map = dict(zip(legenda["Ticker"], legenda["Name"]))
+        #legenda = load_legenda("E7X", "A:C")
+        #name_map = dict(zip(legenda["Ticker"], legenda["Name"]))
 
         stats = pd.DataFrame(index=selected)
-        stats.insert(0, "Name", [name_map.get(s, "") for s in selected])
+        #stats.insert(0, "Name", [name_map.get(s, "") for s in selected])
         stats["Mean (%)"] = df[selected].mean() * 100
         stats["Min (%)"] = df[selected].min() * 100
         stats["Max (%)"] = df[selected].max() * 100
