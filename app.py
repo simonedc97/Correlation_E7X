@@ -432,10 +432,10 @@ with tab_exposure:
 
     with col_plot:
         st.subheader("Exposure")
-
+    
         fig = go.Figure()
         df_plot = df.melt("Portfolio", metrics, "Metric", "Value")
-
+    
         for p in sel_ports:
             d = df_plot[df_plot["Portfolio"] == p]
             fig.add_trace(go.Bar(
@@ -443,25 +443,34 @@ with tab_exposure:
                 y=d["Value"],
                 name=pretty_name(p)
             ))
-
+    
         fig.update_layout(
             barmode="group",
             height=600,
             template="plotly_white"
         )
-
+    
         st.plotly_chart(fig, use_container_width=True)
+    
+        # ------------------------------
+        # Download Excel (stesso pattern)
+        # ------------------------------
         df_download = df_plot[df_plot["Portfolio"].isin(sel_ports)].copy()
-
+    
         output = BytesIO()
-        comp.to_excel(output, index=False)
-        output.seek(0)   # <-- QUESTO MANCAVA
-        
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df_download.to_excel(
+                writer,
+                sheet_name="Exposure",
+                index=False
+            )
+    
         st.download_button(
-            label=f"📥 Download {selected_portfolio} vs Bucket Exposure as Excel",
-            data=output,
-            file_name=f"{selected_portfolio}_vs_bucket_exposure.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            label="📥 Download Exposure as Excel",
+            data=output.getvalue(),
+            file_name="exposure.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key="download_exposure"
         )
 
         # ------------------------------
