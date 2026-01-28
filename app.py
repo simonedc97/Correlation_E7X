@@ -417,7 +417,6 @@ with tab_exposure:
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    st.plotly_chart(fig_comp, use_container_width=True)
     st.markdown(
         """
         <div style="display: flex; align-items: center;">
