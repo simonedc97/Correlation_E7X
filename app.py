@@ -79,7 +79,7 @@ exposure_data = load_exposure_data("E7X_Exposure.xlsx")
 # TAB — CORRELATION
 # ==================================================
 with tab_corr:
-    st.title("E7X Dynamic Asset Allocation vs Funds")
+    st.title("Dynamic Asset Allocation vs Funds")
 
     # Layout con "sidebar" nella colonna di sinistra
     col_ctrl, col_plot = st.columns([1, 4])
