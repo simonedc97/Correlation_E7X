@@ -129,27 +129,46 @@ with tab_corr:
     )
 
     # Radar
-    snapshot = df.loc[df.index.max(), selected]
+    st.subheader("Correlation Radar")
+    
+    snapshot_date = df.index.max()
+    snapshot = df.loc[snapshot_date, selected]
     mean_corr = df[selected].mean()
-
+    
     fig_radar = go.Figure()
-    fig_radar.add_trace(go.Scatterpolar(
-        r=snapshot * 100,
-        theta=snapshot.index,
-        name="End date"
-    ))
-    fig_radar.add_trace(go.Scatterpolar(
-        r=mean_corr * 100,
-        theta=mean_corr.index,
-        name="Mean",
-        line=dict(dash="dot")
-    ))
-
-    fig_radar.update_layout(
-        polar=dict(radialaxis=dict(range=[-100, 100])),
-        height=600
+    
+    fig_radar.add_trace(
+        go.Scatterpolar(
+            r=snapshot.values * 100,
+            theta=snapshot.index,
+            name=f"End date ({snapshot_date.date()})",
+            line=dict(width=3)
+        )
     )
+    
+    fig_radar.add_trace(
+        go.Scatterpolar(
+            r=mean_corr.values * 100,
+            theta=mean_corr.index,
+            name="Period mean",
+            line=dict(dash="dot")
+        )
+    )
+    
+    fig_radar.update_layout(
+        polar=dict(
+            radialaxis=dict(
+                visible=True,
+                range=[-100, 100],
+                ticksuffix="%"
+            )
+        ),
+        template="plotly_white",
+        height=650
+    )
+    
     st.plotly_chart(fig_radar, use_container_width=True)
+
 
     # Summary stats
     legenda = load_legenda("E7X", "A:C")
