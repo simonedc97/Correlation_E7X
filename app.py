@@ -187,21 +187,37 @@ with tab_corr:
 
         st.plotly_chart(fig_radar, use_container_width=True)
 
-        # Summary stats
         st.subheader("Summary Statistics")
-
-        stats = pd.DataFrame(
-            {
-                "Name": [pretty_name(s) for s in selected],
-                "Mean (%)": df[selected].mean() * 100,
-                "Min (%)": df[selected].min() * 100,
-                "Max (%)": df[selected].max() * 100,
-            },
-            index=selected
+        
+        stats_df = pd.DataFrame(index=selected)
+        
+        # Colonna Name (pretty)
+        stats_df.insert(
+            0,
+            "Name",
+            [pretty_name(s) for s in selected]
         )
-
+        
+        # Statistiche
+        stats_df["Mean (%)"] = df[selected].mean() * 100
+        stats_df["Min (%)"] = df[selected].min() * 100
+        stats_df["Min Date"] = [
+            df[col][df[col] == df[col].min()].index.max()
+            for col in selected
+        ]
+        stats_df["Max (%)"] = df[selected].max() * 100
+        stats_df["Max Date"] = [
+            df[col][df[col] == df[col].max()].index.max()
+            for col in selected
+        ]
+        
+        # Formattazione date
+        stats_df["Min Date"] = pd.to_datetime(stats_df["Min Date"]).dt.strftime("%d/%m/%Y")
+        stats_df["Max Date"] = pd.to_datetime(stats_df["Max Date"]).dt.strftime("%d/%m/%Y")
+        
+        # Visualizzazione
         st.dataframe(
-            stats.reset_index(drop=True).style.format({
+            stats_df.style.format({
                 "Mean (%)": "{:.2f}%",
                 "Min (%)": "{:.2f}%",
                 "Max (%)": "{:.2f}%"
