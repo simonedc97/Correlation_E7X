@@ -327,22 +327,24 @@ with tab_stress:
         ].sort_values("Date")
         
         if not df_detail.empty:
-            fig_detail = go.Figure()
-            fig_detail.add_trace(go.Scatter(
-                x=df_detail["Date"],
-                y=df_detail["StressPnL"],
-                mode="lines+markers",
-                name=pretty_name(clicked_portfolio)
-            ))
+            # Qui mettiamo lo st.expander
+            with st.expander("Open for Strategy Analysis", expanded=False):
+                fig_detail = go.Figure()
+                fig_detail.add_trace(go.Scatter(
+                    x=df_detail["Date"],
+                    y=df_detail["StressPnL"],
+                    mode="lines+markers",
+                    name=pretty_name(clicked_portfolio)
+                ))
         
-            fig_detail.update_layout(
-                height=450,
-                template="plotly_white",
-                title=f"{pretty_name(clicked_portfolio)} – Scenario: {clicked_scenario}",
-                yaxis_title="Stress PnL (bps)"
-            )
+                fig_detail.update_layout(
+                    height=450,
+                    template="plotly_white",
+                    title=f"{pretty_name(clicked_portfolio)} – Scenario: {clicked_scenario}",
+                    yaxis_title="Stress PnL (bps)"
+                )
         
-            st.plotly_chart(fig_detail, use_container_width=True)
+                st.plotly_chart(fig_detail, use_container_width=True)
 
 
         
