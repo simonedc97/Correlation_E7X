@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.colors import qualitative
 from io import BytesIO
+from streamlit_plotly_events import plotly_events
 
 # ==================================================
 # Page config
