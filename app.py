@@ -360,13 +360,26 @@ with tab_stress:
             ]
             
             if not df_detail.empty:
+                # Colori tipo heatmap: rossi per negativi, verdi per positivi
+                import numpy as np
+                
+                vals = df_detail["Stress PnL"].values
+                # Normalizza tra 0 e 1 per il mapping
+                max_abs = np.max(np.abs(vals)) if np.max(np.abs(vals)) != 0 else 1
+                colors = [
+                    f"rgba({int(255*abs(min(0,v)/max_abs))},{int(255*max(0,v)/max_abs)},0,0.8)"
+                    for v in vals
+                ]
+                # In alternativa: rosso = [255,0,0], verde = [0,255,0] proporzionale al valore
+                
                 fig_detail = go.Figure()
                 fig_detail.add_trace(go.Bar(
                     x=df_detail.iloc[:, 0],  # valori a livello di riga
                     y=df_detail["Stress PnL"],
-                    name=pretty_name(clicked_portfolio)
+                    name=pretty_name(clicked_portfolio),
+                    marker_color=colors
                 ))
-        
+            
                 fig_detail.update_layout(
                     height=450,
                     template="plotly_white",
@@ -374,7 +387,7 @@ with tab_stress:
                     yaxis_title="Stress PnL (bps)",
                     xaxis_title="Strategy"
                 )
-        
+            
                 st.plotly_chart(fig_detail, use_container_width=True)
 
 
