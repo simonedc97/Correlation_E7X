@@ -118,6 +118,8 @@ with tab_corr:
         )
 
     with col_plot:
+        st.subheader("Correlation Time Series")
+
         fig = go.Figure()
         palette = qualitative.Plotly
 
@@ -141,7 +143,7 @@ with tab_corr:
         output = BytesIO()
         (df[selected] * 100).to_excel(output)
         st.download_button(
-            "📥 Download Time Series Correlations as Excel",
+            "📥 Download Correlation Time Series as Excel",
             output.getvalue(),
             "correlation_time_series.xlsx"
         )
@@ -186,6 +188,8 @@ with tab_corr:
         st.plotly_chart(fig_radar, use_container_width=True)
 
         # Summary stats
+        st.subheader("Summary Statistics")
+
         stats = pd.DataFrame(
             {
                 "Name": [pretty_name(s) for s in selected],
@@ -257,6 +261,8 @@ with tab_stress:
         # ------------------------------
         # Bar chart
         # ------------------------------
+        st.subheader("Stress Test PnL")
+
         fig = go.Figure()
         for p in sel_ports:
             d = df[df["Portfolio"] == p]
@@ -401,6 +407,8 @@ with tab_exposure:
         metrics = ["Equity Exposure", "Duration", "Spread Duration"]
 
     with col_plot:
+        st.subheader("Exposure")
+
         fig = go.Figure()
         df_plot = df.melt("Portfolio", metrics, "Metric", "Value")
 
