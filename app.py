@@ -304,7 +304,52 @@ with tab_stress:
             yaxis_title="Stress PnL (bps)"
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        selected_points = plotly_events(
+            fig,
+            click_event=True,
+            hover_event=False,
+            select_event=False,
+            override_height=600,
+            key="stress_click"
+        )
+        if selected_points:
+            pt = selected_points[0]
+        
+            # Serie cliccata
+            curve_idx = pt["curveNumber"]
+            scenario = pt["x"]
+        
+            clicked_portfolio = sel_ports[curve_idx]
+        
+            st.markdown("---")
+            st.subheader(
+                f"📊 Dettaglio Stress PnL – {pretty_name(clicked_portfolio)}"
+            )
+        
+            df_detail = stress_data[
+                (stress_data["Portfolio"] == clicked_portfolio) &
+                (stress_data["ScenarioName"] == scenario)
+            ].sort_values("Date")
+        
+            fig_detail = go.Figure()
+        
+            fig_detail.add_trace(go.Scatter(
+                x=df_detail["Date"],
+                y=df_detail["StressPnL"],
+                mode="lines+markers",
+                name=pretty_name(clicked_portfolio)
+            ))
+        
+            fig_detail.update_layout(
+                height=450,
+                template="plotly_white",
+                title=f"{pretty_name(clicked_portfolio)} – Scenario: {scenario}",
+                yaxis_title="Stress PnL (bps)"
+            )
+        
+            st.plotly_chart(fig_detail, use_container_width=True)
+        
+        
         output = BytesIO()
         with pd.ExcelWriter(output, engine="openpyxl") as writer:
             df.to_excel(writer, sheet_name="Stress Test PnL", index=False)
