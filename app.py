@@ -401,6 +401,11 @@ with tab_exposure:
         y=comp["Metric"],
         mode="markers",
         name="Bucket median"
+        marker=dict(
+        color="blue",
+        size=10,
+        symbol="circle"
+        )
     ))
 
     fig.add_trace(go.Scatter(
