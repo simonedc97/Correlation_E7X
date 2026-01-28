@@ -332,47 +332,51 @@ with tab_stress:
         
                 records.append(df)
         
-            return pd.concat(records, ignore_index=True)
-            stress_bystrat = load_stress_bystrat("stress_test_bystrat.xlsx")
-            with st.expander("Open for Strategy Analysis", expanded=False):
-                
-                # Select portfolio
-                clicked_portfolio = st.selectbox(
-                    "Apri grafico dettagliato per portfolio",
-                    sel_ports,
-                    format_func=pretty_name
-                )
-                
-                # Select scenario
-                clicked_scenario = st.selectbox(
-                    "Scenario",
-                    sel_scen
-                )
-                
-                # Filtra dati
-                df_detail = stress_bystrat[
-                    (stress_bystrat["Portfolio"] == clicked_portfolio) &
-                    (stress_bystrat["ScenarioName"] == clicked_scenario) &
-                    (stress_bystrat.iloc[:, 0] != "Total")  # esclude la riga Total, assumendo che sia nella prima colonna
-                ]
-                
-                if not df_detail.empty:
-                    fig_detail = go.Figure()
-                    fig_detail.add_trace(go.Bar(
-                        x=df_detail.iloc[:, 0],  # valori a livello di riga, es: asset o sottocategoria
-                        y=df_detail["StressPnL"],
-                        name=pretty_name(clicked_portfolio)
-                    ))
+            return pd.concat(records, ignore_index=True)  # <-- qui finisce la funzione
+        
+        # === fuori dalla funzione ===
+        stress_bystrat = load_stress_bystrat("stress_test_bystrat.xlsx")
+        
+        with st.expander("Open for Strategy Analysis", expanded=False):
             
-                    fig_detail.update_layout(
-                        height=450,
-                        template="plotly_white",
-                        title=f"{pretty_name(clicked_portfolio)} – Scenario: {clicked_scenario}",
-                        yaxis_title="Stress PnL (bps)",
-                        xaxis_title="Component"
-                    )
+            # Select portfolio
+            clicked_portfolio = st.selectbox(
+                "Apri grafico dettagliato per portfolio",
+                sel_ports,
+                format_func=pretty_name
+            )
             
-                    st.plotly_chart(fig_detail, use_container_width=True)
+            # Select scenario
+            clicked_scenario = st.selectbox(
+                "Scenario",
+                sel_scen
+            )
+            
+            # Filtra dati
+            df_detail = stress_bystrat[
+                (stress_bystrat["Portfolio"] == clicked_portfolio) &
+                (stress_bystrat["ScenarioName"] == clicked_scenario) &
+                (stress_bystrat.iloc[:, 0] != "Total")  # esclude la riga Total
+            ]
+            
+            if not df_detail.empty:
+                fig_detail = go.Figure()
+                fig_detail.add_trace(go.Bar(
+                    x=df_detail.iloc[:, 0],  # valori a livello di riga
+                    y=df_detail["StressPnL"],
+                    name=pretty_name(clicked_portfolio)
+                ))
+        
+                fig_detail.update_layout(
+                    height=450,
+                    template="plotly_white",
+                    title=f"{pretty_name(clicked_portfolio)} – Scenario: {clicked_scenario}",
+                    yaxis_title="Stress PnL (bps)",
+                    xaxis_title="Component"
+                )
+        
+                st.plotly_chart(fig_detail, use_container_width=True)
+
 
 
 
