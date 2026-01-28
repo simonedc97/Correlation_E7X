@@ -294,7 +294,7 @@ with tab_stress:
         y=plot_df["ScenarioName"],
         mode="markers",
         name=selected_portfolio,
-        marker=dict(symbol="star", size=14)
+        marker=dict(symbol="star", size=14, color="gold")
     ))
 
     fig.update_layout(
@@ -426,7 +426,7 @@ with tab_exposure:
         x=comp[selected_portfolio],
         y=comp["Metric"],
         mode="markers",
-        marker=dict(symbol="star", size=14),
+        marker=dict(symbol="star", size=14, color="gold"),
         name=selected_portfolio
     ))
 
