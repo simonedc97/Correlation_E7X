@@ -421,21 +421,21 @@ with tab_exposure:
         st.plotly_chart(fig, use_container_width=True)
         df_download = df_plot[df_plot["Portfolio"].isin(sel_ports)].copy()
 
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-        df_download.to_excel(
-            writer,
-            sheet_name="Metrics Comparison",
-            index=False
-        )
-
-        st.download_button(
-            label="📥 Download Metrics Comparison as Excel",
-            data=output.getvalue(),
-            file_name="metrics_comparison.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            key="download_metrics_comparison"
-        )
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df_download.to_excel(
+                writer,
+                sheet_name="Metrics Comparison",
+                index=False
+            )
+    
+            st.download_button(
+                label="📥 Download Metrics Comparison as Excel",
+                data=output.getvalue(),
+                file_name="metrics_comparison.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="download_metrics_comparison"
+            )
         # ------------------------------
         # Comparison Analysis
         # ------------------------------
