@@ -68,6 +68,23 @@ def load_exposure_data(path):
 def load_legenda(sheet, cols):
     return pd.read_excel("Legenda.xlsx", sheet_name=sheet, usecols=cols)
 
+
+# ==================================================
+# NAME MAP (TICKER → NAME)
+# ==================================================
+@st.cache_data
+def load_name_map():
+    legenda = load_legenda("E7X", "A:C")
+    return dict(zip(legenda["Ticker"], legenda["Name"]))
+
+NAME_MAP = load_name_map()
+
+
+def pretty_name(ticker):
+    """Fallback automatico: se non esiste in legenda → ticker"""
+    return NAME_MAP.get(ticker, ticker)
+
+
 # ==================================================
 # LOAD DATA
 # ==================================================
@@ -81,7 +98,6 @@ exposure_data = load_exposure_data("E7X_Exposure.xlsx")
 with tab_corr:
     st.title("Dynamic Asset Allocation vs Funds")
 
-    # Layout con "sidebar" nella colonna di sinistra
     col_ctrl, col_plot = st.columns([1, 4])
 
     with col_ctrl:
@@ -99,16 +115,20 @@ with tab_corr:
         )
 
     with col_plot:
+        # ------------------------------
         # Time series
+        # ------------------------------
         fig = go.Figure()
         palette = qualitative.Plotly
+
         for i, c in enumerate(selected):
             fig.add_trace(go.Scatter(
                 x=df.index,
                 y=df[c] * 100,
-                name=c,
+                name=pretty_name(c),
                 line=dict(color=palette[i % len(palette)])
             ))
+
         fig.update_layout(
             height=600,
             template="plotly_white",
@@ -125,25 +145,32 @@ with tab_corr:
             "correlation_time_series.xlsx"
         )
 
+        # ------------------------------
         # Radar
+        # ------------------------------
         st.subheader("Correlation Radar")
+
         snapshot_date = df.index.max()
         snapshot = df.loc[snapshot_date, selected]
         mean_corr = df[selected].mean()
 
+        theta_names = [pretty_name(c) for c in snapshot.index]
+
         fig_radar = go.Figure()
         fig_radar.add_trace(go.Scatterpolar(
             r=snapshot.values * 100,
-            theta=snapshot.index,
+            theta=theta_names,
             name=f"End date ({snapshot_date.date()})",
             line=dict(width=3)
         ))
+
         fig_radar.add_trace(go.Scatterpolar(
             r=mean_corr.values * 100,
-            theta=mean_corr.index,
+            theta=theta_names,
             name="Period mean",
             line=dict(dash="dot")
         ))
+
         fig_radar.update_layout(
             polar=dict(
                 radialaxis=dict(
@@ -157,18 +184,23 @@ with tab_corr:
         )
         st.plotly_chart(fig_radar, use_container_width=True)
 
+        # ------------------------------
         # Summary stats
-        #legenda = load_legenda("E7X", "A:C")
-        #name_map = dict(zip(legenda["Ticker"], legenda["Name"]))
+        # ------------------------------
+        stats = pd.DataFrame(
+            {
+                "Name": [pretty_name(s) for s in selected],
+                "Mean (%)": df[selected].mean() * 100,
+                "Min (%)": df[selected].min() * 100,
+                "Max (%)": df[selected].max() * 100,
+            },
+            index=selected
+        )
 
-        stats = pd.DataFrame(index=selected)
-        #stats.insert(0, "Name", [name_map.get(s, "") for s in selected])
-        stats["Mean (%)"] = df[selected].mean() * 100
-        stats["Min (%)"] = df[selected].min() * 100
-        stats["Max (%)"] = df[selected].max() * 100
+        stats.index.name = "Ticker"
 
         st.dataframe(
-            stats.style.format({
+            stats.reset_index(drop=True).style.format({
                 "Mean (%)": "{:.2f}%",
                 "Min (%)": "{:.2f}%",
                 "Max (%)": "{:.2f}%"
@@ -220,15 +252,15 @@ with tab_stress:
         df = df[df["ScenarioName"].isin(sel_scen)]
 
     with col_plot:
-        # Bar chart
         fig = go.Figure()
-        for i, p in enumerate(sel_ports):
+        for p in sel_ports:
             d = df[df["Portfolio"] == p]
             fig.add_trace(go.Bar(
                 x=d["ScenarioName"],
                 y=d["StressPnL"],
-                name=p
+                name=pretty_name(p)
             ))
+
         fig.update_layout(
             barmode="group",
             height=600,
@@ -236,92 +268,6 @@ with tab_stress:
             yaxis_title="Stress PnL (bps)"
         )
         st.plotly_chart(fig, use_container_width=True)
-
-        # Download
-        output = BytesIO()
-        df[["Portfolio", "ScenarioName", "StressPnL"]].to_excel(output, index=False)
-        st.download_button(
-            "📥 Download Stress Test data",
-            output.getvalue(),
-            "stress_test.xlsx"
-        )
-
-        # Comparison Analysis
-        st.markdown("---")
-        st.subheader("Comparison Analysis")
-
-        selected_portfolio = st.selectbox(
-            "Analysis portfolio",
-            sel_ports,
-            index=sel_ports.index("E7X") if "E7X" in sel_ports else 0
-        )
-
-        df_p = df[df["Portfolio"] == selected_portfolio]
-        df_b = df[df["Portfolio"] != selected_portfolio]
-
-        bucket = (
-            df_b.groupby("ScenarioName")["StressPnL"]
-            .agg(
-                bucket_median="median",
-                q25=lambda x: x.quantile(0.25),
-                q75=lambda x: x.quantile(0.75)
-            )
-            .reset_index()
-        )
-
-        plot_df = df_p.merge(bucket, on="ScenarioName")
-
-        fig = go.Figure()
-        for _, r in plot_df.iterrows():
-            fig.add_trace(go.Scatter(
-                x=[r.q25, r.q75],
-                y=[r.ScenarioName]*2,
-                mode="lines",
-                line=dict(width=14, color="rgba(0,0,255,0.25)"),
-                showlegend=False
-            ))
-
-        fig.add_trace(go.Scatter(
-            x=plot_df["bucket_median"],
-            y=plot_df["ScenarioName"],
-            mode="markers",
-            name="Bucket median",
-            marker=dict(color="blue", size=10, symbol="circle")
-        ))
-
-        fig.add_trace(go.Scatter(
-            x=plot_df["StressPnL"],
-            y=plot_df["ScenarioName"],
-            mode="markers",
-            name=selected_portfolio,
-            marker=dict(symbol="star", size=14, color="gold")
-        ))
-
-        fig.update_layout(
-            height=600,
-            template="plotly_white",
-            xaxis_title="Stress PnL (bps)"
-        )
-        st.plotly_chart(fig, use_container_width=True)
-
-        st.markdown(
-            """
-            <div style="display: flex; align-items: center;">
-                <sub style="margin-right: 4px;">Note: the shaded areas</sub>
-                <div style="width: 20px; height: 14px; background-color: rgba(0,0,255,0.25); margin: 0 4px 0 0; border: 1px solid rgba(0,0,0,0.1);"></div>
-                <sub>represent the dispersion between the 25th and 75th percentile of the Bucket.</sub>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-        output = BytesIO()
-        plot_df.to_excel(output, index=False)
-        st.download_button(
-            f"📥 Download {selected_portfolio} vs Bucket",
-            output.getvalue(),
-            f"{selected_portfolio}_vs_bucket_stress.xlsx"
-        )
 
 # ==================================================
 # TAB — EXPOSURE
@@ -349,108 +295,23 @@ with tab_exposure:
         metrics = ["Equity Exposure", "Duration", "Spread Duration"]
 
     with col_plot:
-        # Bar chart
         df_plot = df.melt("Portfolio", metrics, "Metric", "Value")
         fig = go.Figure()
-        for i, p in enumerate(sel_ports):
+
+        for p in sel_ports:
             d = df_plot[df_plot["Portfolio"] == p]
             fig.add_trace(go.Bar(
                 x=d["Metric"],
                 y=d["Value"],
-                name=p
+                name=pretty_name(p)
             ))
+
         fig.update_layout(
             barmode="group",
             height=600,
             template="plotly_white"
         )
         st.plotly_chart(fig, use_container_width=True)
-
-        # Download
-        output = BytesIO()
-        df.to_excel(output, index=False)
-        st.download_button(
-            "📥 Download Exposure data",
-            output.getvalue(),
-            "exposure.xlsx"
-        )
-
-        # Comparison Analysis
-        st.markdown("---")
-        st.subheader("Comparison Analysis")
-
-        selected_portfolio = st.selectbox(
-            "Analysis portfolio",
-            sel_ports,
-            index=sel_ports.index("E7X") if "E7X" in sel_ports else 0
-        )
-
-        df_p = df[df["Portfolio"] == selected_portfolio][metrics]
-        df_b = df[df["Portfolio"] != selected_portfolio][metrics]
-
-        bucket = df_b.agg(
-            ["median", lambda x: x.quantile(0.25), lambda x: x.quantile(0.75)]
-        ).T
-        bucket.columns = ["bucket_median", "q25", "q75"]
-
-        comp = (
-            df_p.T
-            .rename(columns={df_p.index[0]: selected_portfolio})
-            .reset_index()
-            .rename(columns={"index": "Metric"})
-            .merge(bucket.reset_index().rename(columns={"index": "Metric"}))
-        )
-
-        fig = go.Figure()
-        for _, r in comp.iterrows():
-            fig.add_trace(go.Scatter(
-                x=[r.q25, r.q75],
-                y=[r.Metric]*2,
-                mode="lines",
-                line=dict(width=14, color="rgba(0,0,255,0.3)"),
-                showlegend=False
-            ))
-
-        fig.add_trace(go.Scatter(
-            x=comp["bucket_median"],
-            y=comp["Metric"],
-            mode="markers",
-            name="Bucket median",
-            marker=dict(color="blue", size=10, symbol="circle")
-        ))
-
-        fig.add_trace(go.Scatter(
-            x=comp[selected_portfolio],
-            y=comp["Metric"],
-            mode="markers",
-            marker=dict(symbol="star", size=14, color="gold"),
-            name=selected_portfolio
-        ))
-
-        fig.update_layout(
-            height=600,
-            template="plotly_white"
-        )
-        st.plotly_chart(fig, use_container_width=True)
-
-        st.markdown(
-            """
-            <div style="display: flex; align-items: center;">
-                <sub style="margin-right: 4px;">Note: the shaded areas</sub>
-                <div style="width: 20px; height: 14px; background-color: rgba(0,0,255,0.25); margin: 0 4px 0 0; border: 1px solid rgba(0,0,0,0.1);"></div>
-                <sub>represent the dispersion between the 25th and 75th percentile of the Bucket.</sub>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-        output = BytesIO()
-        comp.to_excel(output, index=False)
-        st.download_button(
-            f"📥 Download {selected_portfolio} vs Bucket Exposure",
-            output.getvalue(),
-            f"{selected_portfolio}_vs_bucket_exposure.xlsx"
-        )
 
 # ==================================================
 # TAB — LEGENDA
