@@ -460,4 +460,4 @@ with tab_legenda:
     st.subheader("Series")
     st.dataframe(load_legenda("E7X", "A:B"), hide_index=True)
     st.subheader("Stress Scenarios")
-    st.dataframe(load_legenda("Scenari", "A:B"), hide_index=True)
+    st.dataframe(load_legenda("Scenari", "A:C"), hide_index=True)
