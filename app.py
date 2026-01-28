@@ -304,50 +304,46 @@ with tab_stress:
             yaxis_title="Stress PnL (bps)"
         )
 
+
+        
         st.plotly_chart(fig, use_container_width=True)
-        selected_points = plotly_events(
-            fig,
-            click_event=True,
-            hover_event=False,
-            select_event=False,
-            override_height=0,   # 👈 invisibile
-            key="stress_click"
+        # Select per drill-down del portfolio
+        clicked_portfolio = st.selectbox(
+            "Apri grafico dettagliato per portfolio",
+            sel_ports,
+            format_func=pretty_name
         )
-        if selected_points:
-            pt = selected_points[0]
         
-            scenario = pt["x"]
-            trace_name = pt["data"]["name"]   # <-- QUESTO È IL PORTFOLIO VISIVO
+        # Select per scenario
+        clicked_scenario = st.selectbox(
+            "Scenario",
+            sel_scen
+        )
         
-            # reverse map pretty_name → codice portfolio
-            reverse_map = {pretty_name(k): k for k in sel_ports}
-            clicked_portfolio = reverse_map.get(trace_name)
+        # Mostra grafico drill-down solo se entrambi selezionati
+        df_detail = stress_data[
+            (stress_data["Portfolio"] == clicked_portfolio) &
+            (stress_data["ScenarioName"] == clicked_scenario)
+        ].sort_values("Date")
         
-            if clicked_portfolio is not None:
-                st.markdown("---")
-                st.subheader(f"📊 Dettaglio Stress PnL – {trace_name}")
+        if not df_detail.empty:
+            fig_detail = go.Figure()
+            fig_detail.add_trace(go.Scatter(
+                x=df_detail["Date"],
+                y=df_detail["StressPnL"],
+                mode="lines+markers",
+                name=pretty_name(clicked_portfolio)
+            ))
         
-                df_detail = stress_data[
-                    (stress_data["Portfolio"] == clicked_portfolio) &
-                    (stress_data["ScenarioName"] == scenario)
-                ].sort_values("Date")
+            fig_detail.update_layout(
+                height=450,
+                template="plotly_white",
+                title=f"{pretty_name(clicked_portfolio)} – Scenario: {clicked_scenario}",
+                yaxis_title="Stress PnL (bps)"
+            )
         
-                fig_detail = go.Figure()
-                fig_detail.add_trace(go.Scatter(
-                    x=df_detail["Date"],
-                    y=df_detail["StressPnL"],
-                    mode="lines+markers",
-                    name=trace_name
-                ))
-        
-                fig_detail.update_layout(
-                    height=450,
-                    template="plotly_white",
-                    title=f"{trace_name} – Scenario: {scenario}",
-                    yaxis_title="Stress PnL (bps)"
-                )
-        
-                st.plotly_chart(fig_detail, use_container_width=True)
+            st.plotly_chart(fig_detail, use_container_width=True)
+
 
         
         
