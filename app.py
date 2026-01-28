@@ -226,11 +226,19 @@ with tab_corr:
         )
       
         output = BytesIO()
-        stats.to_excel(output)
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            stats_df.to_excel(
+                writer,
+                sheet_name="Summary Statistics",
+                index=False
+            )
+        
         st.download_button(
-            "📥 Download Summary Statistics as Excel",
-            output.getvalue(),
-            "correlation_summary.xlsx"
+            label="📥 Download Summary Statistics as Excel",
+            data=output.getvalue(),
+            file_name="summary_statistics.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key="download_summary_stats"
         )
 # ==================================================
 # TAB — STRESS TEST
