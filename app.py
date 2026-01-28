@@ -70,7 +70,7 @@ def load_legenda(sheet, cols):
 
 
 # ==================================================
-# NAME MAP (TICKER → NAME)
+# NAME MAP (Ticker → Name)
 # ==================================================
 @st.cache_data
 def load_name_map():
@@ -88,7 +88,7 @@ def pretty_name(x):
 # ==================================================
 # LOAD DATA
 # ==================================================
-corr = load_corr_data("corrE7X.xlsx")
+corr = load_corr_data("corrE7X_test.xlsx")
 stress_data = load_stress_data("stress_test_totE7X.xlsx")
 exposure_data = load_exposure_data("E7X_Exposure.xlsx")
 
@@ -98,7 +98,6 @@ exposure_data = load_exposure_data("E7X_Exposure.xlsx")
 with tab_corr:
     st.title("Dynamic Asset Allocation vs Funds")
 
-    # ⬅️ Controls più strette
     col_ctrl, col_plot = st.columns([0.7, 4.3])
 
     with col_ctrl:
@@ -119,9 +118,6 @@ with tab_corr:
         )
 
     with col_plot:
-        # ------------------------------
-        # Time series
-        # ------------------------------
         fig = go.Figure()
         palette = qualitative.Plotly
 
@@ -138,20 +134,10 @@ with tab_corr:
             template="plotly_white",
             yaxis_title="Correlation (%)"
         )
+
         st.plotly_chart(fig, use_container_width=True)
 
-        # Download
-        output = BytesIO()
-        (df[selected] * 100).to_excel(output)
-        st.download_button(
-            "📥 Download time series data",
-            output.getvalue(),
-            "correlation_time_series.xlsx"
-        )
-
-        # ------------------------------
         # Radar
-        # ------------------------------
         st.subheader("Correlation Radar")
 
         snapshot_date = df.index.max()
@@ -186,11 +172,10 @@ with tab_corr:
             template="plotly_white",
             height=650
         )
+
         st.plotly_chart(fig_radar, use_container_width=True)
 
-        # ------------------------------
         # Summary stats
-        # ------------------------------
         stats = pd.DataFrame(
             {
                 "Name": [pretty_name(s) for s in selected],
@@ -233,10 +218,9 @@ with tab_stress:
         df = stress_data[stress_data["Date"] == date]
 
         portfolios = df["Portfolio"].unique().tolist()
-
         sel_ports = st.multiselect(
             "Select portfolios",
-            options=portfolios,
+            portfolios,
             default=portfolios,
             format_func=pretty_name
         )
@@ -253,8 +237,10 @@ with tab_stress:
         df = df[df["ScenarioName"].isin(sel_scen)]
 
     with col_plot:
+        # ------------------------------
+        # Bar chart
+        # ------------------------------
         fig = go.Figure()
-
         for p in sel_ports:
             d = df[df["Portfolio"] == p]
             fig.add_trace(go.Bar(
@@ -268,6 +254,69 @@ with tab_stress:
             height=600,
             template="plotly_white",
             yaxis_title="Stress PnL (bps)"
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        # ------------------------------
+        # Comparison Analysis
+        # ------------------------------
+        st.markdown("---")
+        st.subheader("Comparison Analysis")
+
+        selected_portfolio = st.selectbox(
+            "Analysis portfolio",
+            sel_ports,
+            index=sel_ports.index("E7X") if "E7X" in sel_ports else 0,
+            format_func=pretty_name
+        )
+
+        df_p = df[df["Portfolio"] == selected_portfolio]
+        df_b = df[df["Portfolio"] != selected_portfolio]
+
+        bucket = (
+            df_b.groupby("ScenarioName")["StressPnL"]
+            .agg(
+                bucket_median="median",
+                q25=lambda x: x.quantile(0.25),
+                q75=lambda x: x.quantile(0.75)
+            )
+            .reset_index()
+        )
+
+        plot_df = df_p.merge(bucket, on="ScenarioName")
+
+        fig = go.Figure()
+
+        for _, r in plot_df.iterrows():
+            fig.add_trace(go.Scatter(
+                x=[r.q25, r.q75],
+                y=[r.ScenarioName] * 2,
+                mode="lines",
+                line=dict(width=14, color="rgba(0,0,255,0.25)"),
+                showlegend=False
+            ))
+
+        fig.add_trace(go.Scatter(
+            x=plot_df["bucket_median"],
+            y=plot_df["ScenarioName"],
+            mode="markers",
+            name="Bucket median",
+            marker=dict(color="blue", size=10)
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=plot_df["StressPnL"],
+            y=plot_df["ScenarioName"],
+            mode="markers",
+            name=pretty_name(selected_portfolio),
+            marker=dict(symbol="star", size=14, color="gold")
+        ))
+
+        fig.update_layout(
+            height=600,
+            template="plotly_white",
+            xaxis_title="Stress PnL (bps)"
         )
 
         st.plotly_chart(fig, use_container_width=True)
@@ -295,7 +344,6 @@ with tab_exposure:
         df = exposure_data[exposure_data["Date"] == date]
 
         ports = df["Portfolio"].unique().tolist()
-
         sel_ports = st.multiselect(
             "Select portfolios",
             ports,
@@ -308,9 +356,9 @@ with tab_exposure:
         metrics = ["Equity Exposure", "Duration", "Spread Duration"]
 
     with col_plot:
+        fig = go.Figure()
         df_plot = df.melt("Portfolio", metrics, "Metric", "Value")
 
-        fig = go.Figure()
         for p in sel_ports:
             d = df_plot[df_plot["Portfolio"] == p]
             fig.add_trace(go.Bar(
@@ -321,6 +369,70 @@ with tab_exposure:
 
         fig.update_layout(
             barmode="group",
+            height=600,
+            template="plotly_white"
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        # ------------------------------
+        # Comparison Analysis
+        # ------------------------------
+        st.markdown("---")
+        st.subheader("Comparison Analysis")
+
+        selected_portfolio = st.selectbox(
+            "Analysis portfolio",
+            sel_ports,
+            index=sel_ports.index("E7X") if "E7X" in sel_ports else 0,
+            format_func=pretty_name
+        )
+
+        df_p = df[df["Portfolio"] == selected_portfolio][metrics]
+        df_b = df[df["Portfolio"] != selected_portfolio][metrics]
+
+        bucket = df_b.agg(
+            ["median", lambda x: x.quantile(0.25), lambda x: x.quantile(0.75)]
+        ).T
+
+        bucket.columns = ["bucket_median", "q25", "q75"]
+
+        comp = (
+            df_p.T
+            .rename(columns={df_p.index[0]: selected_portfolio})
+            .reset_index()
+            .rename(columns={"index": "Metric"})
+            .merge(bucket.reset_index().rename(columns={"index": "Metric"}))
+        )
+
+        fig = go.Figure()
+
+        for _, r in comp.iterrows():
+            fig.add_trace(go.Scatter(
+                x=[r.q25, r.q75],
+                y=[r.Metric] * 2,
+                mode="lines",
+                line=dict(width=14, color="rgba(0,0,255,0.3)"),
+                showlegend=False
+            ))
+
+        fig.add_trace(go.Scatter(
+            x=comp["bucket_median"],
+            y=comp["Metric"],
+            mode="markers",
+            name="Bucket median",
+            marker=dict(color="blue", size=10)
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=comp[selected_portfolio],
+            y=comp["Metric"],
+            mode="markers",
+            name=pretty_name(selected_portfolio),
+            marker=dict(symbol="star", size=14, color="gold")
+        ))
+
+        fig.update_layout(
             height=600,
             template="plotly_white"
         )
