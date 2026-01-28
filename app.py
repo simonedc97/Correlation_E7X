@@ -141,7 +141,7 @@ with tab_corr:
         output = BytesIO()
         (df[selected] * 100).to_excel(output)
         st.download_button(
-            "📥 Download time series data",
+            "📥 Download Time Series Correlations as Excel",
             output.getvalue(),
             "correlation_time_series.xlsx"
         )
@@ -208,7 +208,7 @@ with tab_corr:
         output = BytesIO()
         stats.to_excel(output)
         st.download_button(
-            "📥 Download summary statistics",
+            "📥 Download Summary Statistics as Excel",
             output.getvalue(),
             "correlation_summary.xlsx"
         )
@@ -279,7 +279,7 @@ with tab_stress:
             df.to_excel(writer, sheet_name="Stress Test PnL", index=False)
         
         st.download_button(
-            label="📥 Download Stress PnL data as Excel",
+            label="📥 Download Stress PnL as Excel",
             data=output.getvalue(),
             file_name="stress_test_pnl.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -362,7 +362,7 @@ with tab_stress:
         output = BytesIO()
         plot_df.to_excel(output, index=False)
         st.download_button(
-            f"📥 Download {selected_portfolio} vs Bucket",
+            f"📥 Download {selected_portfolio} vs Bucket Stress Test as Excel",
             output.getvalue(),
             f"{selected_portfolio}_vs_bucket_stress.xlsx"
         )
@@ -430,7 +430,7 @@ with tab_exposure:
             )
     
             st.download_button(
-                label="📥 Download Metrics Comparison as Excel",
+                label="📥 Download Exposures as Excel",
                 data=output.getvalue(),
                 file_name="metrics_comparison.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -513,7 +513,7 @@ with tab_exposure:
         output = BytesIO()
         comp.to_excel(output, index=False)
         st.download_button(
-            f"📥 Download {selected_portfolio} vs Bucket Exposure",
+            f"📥 Download {selected_portfolio} vs Bucket Exposure as Excel",
             output.getvalue(),
             f"{selected_portfolio}_vs_bucket_exposure.xlsx"
         )
