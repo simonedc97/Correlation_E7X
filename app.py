@@ -372,7 +372,7 @@ with tab_stress:
                     template="plotly_white",
                     title=f"{pretty_name(clicked_portfolio)} – Scenario: {clicked_scenario}",
                     yaxis_title="Stress PnL (bps)",
-                    xaxis_title="Component"
+                    xaxis_title="Strategy"
                 )
         
                 st.plotly_chart(fig_detail, use_container_width=True)
