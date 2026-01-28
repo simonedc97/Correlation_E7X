@@ -429,13 +429,13 @@ with tab_exposure:
             index=False
         )
 
-    st.download_button(
-        label="📥 Download Metrics Comparison as Excel",
-        data=output.getvalue(),
-        file_name="metrics_comparison.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        key="download_metrics_comparison"
-    )
+        st.download_button(
+            label="📥 Download Metrics Comparison as Excel",
+            data=output.getvalue(),
+            file_name="metrics_comparison.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key="download_metrics_comparison"
+        )
         # ------------------------------
         # Comparison Analysis
         # ------------------------------
