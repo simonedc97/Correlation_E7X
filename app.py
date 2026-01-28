@@ -273,7 +273,7 @@ with tab_stress:
             x=[r.q25, r.q75],
             y=[r.ScenarioName]*2,
             mode="lines",
-            line=dict(width=14, color="rgba(255,0,0,0.3)"),
+            line=dict(width=14, color="rgba(0,0,255,0.25)"),
             showlegend=False
         ))
 
@@ -282,7 +282,11 @@ with tab_stress:
         y=plot_df["ScenarioName"],
         mode="markers",
         name="Bucket median",
-        marker=dict(color="red")
+        marker=dict(
+        color="blue",
+        size=10,
+        symbol="circle"
+        )
     ))
 
     fig.add_trace(go.Scatter(
@@ -300,6 +304,16 @@ with tab_stress:
     )
 
     st.plotly_chart(fig, use_container_width=True)
+    st.markdown(
+    """
+    <div style="display: flex; align-items: center;">
+        <sub style="margin-right: 4px;">Note: the shaded areas</sub>
+        <div style="width: 20px; height: 14px; background-color: rgba(0,0,255,0.25); margin: 0 4px 0 0; border: 1px solid rgba(0,0,0,0.1);"></div>
+        <sub>represent the dispersion between the 25th and 75th percentile of the Bucket.</sub>
+    </div>
+    """,
+    unsafe_allow_html=True
+    )
 
     output = BytesIO()
     plot_df.to_excel(output, index=False)
