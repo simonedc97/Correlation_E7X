@@ -137,6 +137,16 @@ with tab_corr:
 
         st.plotly_chart(fig, use_container_width=True)
 
+        # Download time series
+        output = BytesIO()
+        (df[selected] * 100).to_excel(output)
+        st.download_button(
+            "📥 Download time series data",
+            output.getvalue(),
+            "correlation_time_series.xlsx"
+        )
+
+        
         # Radar
         st.subheader("Correlation Radar")
 
@@ -194,7 +204,14 @@ with tab_corr:
             }),
             use_container_width=True
         )
-
+      
+        output = BytesIO()
+        stats.to_excel(output)
+        st.download_button(
+            "📥 Download summary statistics",
+            output.getvalue(),
+            "correlation_summary.xlsx"
+        )
 # ==================================================
 # TAB — STRESS TEST
 # ==================================================
