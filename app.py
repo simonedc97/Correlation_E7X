@@ -363,7 +363,7 @@ with tab_stress:
                 fig_detail = go.Figure()
                 fig_detail.add_trace(go.Bar(
                     x=df_detail.iloc[:, 0],  # valori a livello di riga
-                    y=df_detail["StressPnL"],
+                    y=df_detail["Stress PnL"],
                     name=pretty_name(clicked_portfolio)
                 ))
         
