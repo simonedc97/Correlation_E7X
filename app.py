@@ -376,7 +376,7 @@ with tab_stress:
                 df_tm = df_detail.copy()
                 df_tm["size"] = df_tm["Stress PnL"].abs().clip(lower=0.01)
                 
-                root_label = pretty_name(clicked_portfolio)
+                root_label = f"{pretty_name(clicked_portfolio)} - {clicked_scenario}"
                 
                 labels = [root_label] + df_tm.iloc[:, 0].tolist()
                 parents = [""] + [root_label] * len(df_tm)
