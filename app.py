@@ -383,6 +383,9 @@ with tab_stress:
                 values = [df_tm["size"].sum()] + df_tm["size"].tolist()
                 colors = ["white"] + df_tm["Stress PnL"].tolist()
                 
+                # testo: vuoto per root, valori per le strategy
+                texts = [""] + df_tm["Stress PnL"].round(2).astype(str).tolist()
+                
                 fig_detail = go.Figure(
                     go.Treemap(
                         labels=labels,
@@ -394,7 +397,8 @@ with tab_stress:
                             cmid=0,
                             line=dict(color="white", width=2)
                         ),
-                        text=[""] + df_tm["Stress PnL"].round(2).astype(str).tolist(),
+                        text=texts,
+                        # 🔥 il root (text="") non mostra nulla
                         texttemplate="%{label}<br><b>%{text} bps</b>",
                         textfont=dict(size=14, color="black"),
                         hovertemplate=(
@@ -404,9 +408,6 @@ with tab_stress:
                         branchvalues="total"
                     )
                 )
-                
-                # 🔥 NASCONDE IL TESTO DEL ROOT (portfolio)
-                fig_detail.data[0].text[0] = ""
                 
                 fig_detail.update_layout(
                     height=450,
