@@ -380,7 +380,7 @@ with tab_stress:
                 
                 fig_detail = go.Figure(
                     go.Treemap(
-                        labels=df_tm.iloc[:, 0],      # Strategy
+                        labels=df_tm.iloc[:, 0],
                         parents=[""] * len(df_tm),
                         values=df_tm["size"],
                         marker=dict(
@@ -399,11 +399,16 @@ with tab_stress:
                     )
                 )
                 
+                fig_detail.update_traces(root_color="white")
+                
                 fig_detail.update_layout(
                     height=450,
                     template="plotly_white",
+                    paper_bgcolor="white",
+                    plot_bgcolor="white",
                     title=f"{pretty_name(clicked_portfolio)} – Scenario: {clicked_scenario}"
                 )
+
                 
                 st.plotly_chart(fig_detail, use_container_width=True)
                 
