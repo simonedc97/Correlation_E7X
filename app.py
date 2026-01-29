@@ -4,7 +4,6 @@ import plotly.graph_objects as go
 from plotly.colors import qualitative
 from io import BytesIO
 from streamlit_plotly_events import plotly_events
-import numpy as np
 
 # ==================================================
 # Page config
@@ -362,7 +361,7 @@ with tab_stress:
             
             if not df_detail.empty:
                 # Colori tipo heatmap: rossi per negativi, verdi per positivi
-                
+                import numpy as np
                 
                 vals = df_detail["Stress PnL"].values
                 # Normalizza tra 0 e 1 per il mapping
@@ -373,33 +372,24 @@ with tab_stress:
                 ]
                 # In alternativa: rosso = [255,0,0], verde = [0,255,0] proporzionale al valore
                 
-                # Valori
-                strategies = df_detail.iloc[:, 0].astype(str).values
-                values = df_detail["Stress PnL"].values
-                
-                # Heatmap richiede una matrice 2D
-                z = [values]
-                
-                fig_detail = go.Figure(
-                    data=go.Heatmap(
-                        z=z,
-                        x=strategies,
-                        y=[pretty_name(clicked_portfolio)],
-                        colorscale="RdYlGn",
-                        zmid=0,  # zero al centro → rosso negativo, verde positivo
-                        colorbar=dict(title="Stress PnL (bps)")
-                    )
-                )
-                
+                fig_detail = go.Figure()
+                fig_detail.add_trace(go.Bar(
+                    x=df_detail.iloc[:, 0],  # valori a livello di riga
+                    y=df_detail["Stress PnL"],
+                    name=pretty_name(clicked_portfolio),
+                    marker_color=colors
+                ))
+            
                 fig_detail.update_layout(
-                    height=250,
+                    height=450,
                     template="plotly_white",
                     title=f"{pretty_name(clicked_portfolio)} – Scenario: {clicked_scenario}",
-                    xaxis_title="Strategy",
-                    yaxis_title=""
+                    yaxis_title="Stress PnL (bps)",
+                    xaxis_title="Strategy"
                 )
-                
+            
                 st.plotly_chart(fig_detail, use_container_width=True)
+
 
 
 
