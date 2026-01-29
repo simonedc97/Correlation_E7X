@@ -418,6 +418,19 @@ with tab_stress:
                 )
                 
                 st.plotly_chart(fig_detail, use_container_width=True)
+
+    
+                    output = BytesIO()
+            with pd.ExcelWriter(output, engine="openpyxl") as writer:
+                df.to_excel(writer, sheet_name="Stress Test PnL By Strategy", index=False)
+            
+            st.download_button(
+                label="📥 Download Stress PnL By Strategy as Excel",
+                data=output.getvalue(),
+                file_name="stress_test_bystrat.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="download_stress_pnl"
+            )
         
 
         # ------------------------------
