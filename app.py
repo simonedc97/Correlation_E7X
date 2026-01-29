@@ -667,10 +667,12 @@ with tab_exposure:
         comp.to_excel(output, index=False)
         output.seek(0)   # <-- QUESTO MANCAVA
         
+        pretty_portfolio_name = pretty_name(selected_portfolio)
+        
         st.download_button(
-            label=f"📥 Download {selected_portfolio} vs Bucket Exposure as Excel",
+            label=f"📥 Download {pretty_portfolio_name} vs Bucket Exposure as Excel",
             data=output,
-            file_name=f"{selected_portfolio}_vs_bucket_exposure.xlsx",
+            file_name=f"{pretty_portfolio_name.replace(' ', '_').lower()}_vs_bucket_exposure.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 # ==================================================
