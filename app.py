@@ -375,19 +375,22 @@ with tab_stress:
                 
                 df_tm = df_detail.copy()
                 
-                # dimensione = impatto assoluto
-                df_tm["size"] = df_tm["Stress PnL"].abs()
+                # Area proporzionale all'impatto assoluto
+                df_tm["size"] = df_tm["Stress PnL"].abs().clip(lower=0.01)
                 
                 fig_detail = go.Figure(
                     go.Treemap(
-                        labels=df_tm.iloc[:, 0],            # Strategy
-                        parents=[""] * len(df_tm),          # tutte allo stesso livello
-                        values=df_tm["size"],               # area ∝ impatto
+                        labels=df_tm.iloc[:, 0],      # Strategy
+                        parents=[""] * len(df_tm),
+                        values=df_tm["size"],
                         marker=dict(
                             colors=df_tm["Stress PnL"],
                             colorscale="RdYlGn",
                             cmid=0
                         ),
+                        text=df_tm["Stress PnL"],
+                        texttemplate="%{label}<br><b>%{text:.2f} bps</b>",
+                        textfont=dict(size=14, color="black"),
                         hovertemplate=(
                             "<b>%{label}</b><br>"
                             "Stress PnL: %{color:.2f} bps<br>"
