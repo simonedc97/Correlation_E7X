@@ -374,45 +374,46 @@ with tab_stress:
                 # In alternativa: rosso = [255,0,0], verde = [0,255,0] proporzionale al valore
                 
                 df_tm = df_detail.copy()
-                
-                # Area proporzionale all'impatto assoluto
                 df_tm["size"] = df_tm["Stress PnL"].abs().clip(lower=0.01)
+                
+                root_label = pretty_name(clicked_portfolio)
+                
+                labels = [root_label] + df_tm.iloc[:, 0].tolist()
+                parents = [""] + [root_label] * len(df_tm)
+                values = [df_tm["size"].sum()] + df_tm["size"].tolist()
+                colors = ["white"] + df_tm["Stress PnL"].tolist()
                 
                 fig_detail = go.Figure(
                     go.Treemap(
-                        labels=df_tm.iloc[:, 0],
-                        parents=[""] * len(df_tm),
-                        values=df_tm["size"],
+                        labels=labels,
+                        parents=parents,
+                        values=values,
                         marker=dict(
-                            colors=df_tm["Stress PnL"],
+                            colors=colors,
                             colorscale="RdYlGn",
-                            cmid=0
+                            cmid=0,
+                            line=dict(color="white", width=2)
                         ),
-                        text=df_tm["Stress PnL"],
-                        texttemplate="%{label}<br><b>%{text:.2f} bps</b>",
+                        text=[""] + df_tm["Stress PnL"].round(2).astype(str).tolist(),
+                        texttemplate="%{label}<br><b>%{text} bps</b>",
                         textfont=dict(size=14, color="black"),
                         hovertemplate=(
                             "<b>%{label}</b><br>"
-                            "Stress PnL: %{color:.2f} bps<br>"
-                            "Impatto assoluto: %{value:.2f}<extra></extra>"
-                        )
+                            "Stress PnL: %{color:.2f} bps<extra></extra>"
+                        ),
+                        branchvalues="total"
                     )
                 )
-                
-                fig_detail.update_traces(root_color="white")
                 
                 fig_detail.update_layout(
                     height=450,
                     template="plotly_white",
                     paper_bgcolor="white",
                     plot_bgcolor="white",
-                    title=f"{pretty_name(clicked_portfolio)} – Scenario: {clicked_scenario}"
+                    title=f"{root_label} – Scenario: {clicked_scenario}"
                 )
-
                 
                 st.plotly_chart(fig_detail, use_container_width=True)
-                
-
         
         
 
