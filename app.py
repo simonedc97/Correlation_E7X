@@ -422,16 +422,15 @@ with tab_stress:
     
                 output = BytesIO()
                 with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                    df.to_excel(writer, sheet_name="Stress Test PnL By Strategy", index=False)
-            
+                    df_detail.to_excel(writer, sheet_name="Stress Test PnL By Strategy", index=False)
+                
                 st.download_button(
-                    label="📥 Download Stress PnL By Strategy as Excel",
+                    label="📥 Download Stress Test PnL By Strategy",
                     data=output.getvalue(),
-                    file_name="stress_test_bystrat.xlsx",
+                    file_name="stress_test_by_strat.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    key="download_stress_pnl"
+                    key="download_stress_by_strategy"
                 )
-        
 
         # ------------------------------
         # Comparison Analysis
