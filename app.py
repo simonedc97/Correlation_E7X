@@ -414,7 +414,7 @@ with tab_stress:
                     template="plotly_white",
                     paper_bgcolor="white",
                     plot_bgcolor="white",
-                    title=f"{root_label} – Scenario: {clicked_scenario}"
+                    title=f""
                 )
                 
                 st.plotly_chart(fig_detail, use_container_width=True)
