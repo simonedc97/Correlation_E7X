@@ -405,6 +405,9 @@ with tab_stress:
                     )
                 )
                 
+                # 🔥 NASCONDE IL TESTO DEL ROOT (portfolio)
+                fig_detail.data[0].text[0] = ""
+                
                 fig_detail.update_layout(
                     height=450,
                     template="plotly_white",
