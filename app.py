@@ -414,7 +414,6 @@ with tab_stress:
                     template="plotly_white",
                     paper_bgcolor="white",
                     plot_bgcolor="white",
-                    title=f""
                     margin=dict(t=10, b=10, l=10, r=10)
                 )
                 
