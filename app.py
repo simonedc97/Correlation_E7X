@@ -507,11 +507,16 @@ with tab_stress:
 
         output = BytesIO()
         plot_df.to_excel(output, index=False)
+
+        pretty_portfolio_name = pretty_name(selected_portfolio)
+
         st.download_button(
-            f"📥 Download {selected_portfolio} vs Bucket Stress Test as Excel",
-            output.getvalue(),
-            f"{selected_portfolio}_vs_bucket_stress.xlsx"
+            label=f"📥 Download {pretty_portfolio_name} vs Bucket Stress Test By Strategy as Excel",
+            data=output,
+            file_name=f"{pretty_portfolio_name.replace(' ', '_').lower()}_vs_bucket_stress test_bystrategy.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+
 # ==================================================
 # TAB — EXPOSURE
 # ==================================================
