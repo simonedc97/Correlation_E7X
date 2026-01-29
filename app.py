@@ -338,11 +338,11 @@ with tab_stress:
         # === fuori dalla funzione ===
         stress_bystrat = load_stress_bystrat("stress_test_bystrat.xlsx")
         
-        with st.expander("Open for Strategy Analysis", expanded=False):
+        with st.expander("Expand for Stress Test analysis by strategy", expanded=False):
             
             # Select portfolio
             clicked_portfolio = st.selectbox(
-                "Apri grafico dettagliato per portfolio",
+                "Analysis Portfolio",
                 sel_ports,
                 format_func=pretty_name
             )
