@@ -383,7 +383,6 @@ with tab_stress:
                 values = [df_tm["size"].sum()] + df_tm["size"].tolist()
                 colors = ["white"] + df_tm["Stress PnL"].tolist()
                 
-                # testo: vuoto per root, valori per le strategy
                 texts = [""] + df_tm["Stress PnL"].round(2).astype(str).tolist()
                 
                 fig_detail = go.Figure(
@@ -398,8 +397,8 @@ with tab_stress:
                             line=dict(color="white", width=2)
                         ),
                         text=texts,
-                        # 🔥 il root (text="") non mostra nulla
-                        texttemplate="%{label}<br><b>%{text} bps</b>",
+                        textinfo="text",  # 🔥 mostra SOLO text, non labels
+                        texttemplate="%{text} bps",
                         textfont=dict(size=14, color="black"),
                         hovertemplate=(
                             "<b>%{label}</b><br>"
@@ -418,7 +417,6 @@ with tab_stress:
                 )
                 
                 st.plotly_chart(fig_detail, use_container_width=True)
-        
         
 
         # ------------------------------
