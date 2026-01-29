@@ -415,6 +415,7 @@ with tab_stress:
                     paper_bgcolor="white",
                     plot_bgcolor="white",
                     title=f""
+                    margin=dict(t=10, b=10, l=10, r=10)
                 )
                 
                 st.plotly_chart(fig_detail, use_container_width=True)
