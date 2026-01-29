@@ -425,7 +425,7 @@ with tab_stress:
                     df_detail.to_excel(writer, sheet_name="Stress Test PnL By Strategy", index=False)
                 
                 st.download_button(
-                    label="📥 Download Stress Test PnL By Strategy",
+                    label="📥 Download Stress Test PnL By Strategy as Excel",
                     data=output.getvalue(),
                     file_name="stress_test_by_strat.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
