@@ -513,7 +513,7 @@ with tab_stress:
         st.download_button(
             label=f"📥 Download {pretty_portfolio_name} vs Bucket Stress Test By Strategy as Excel",
             data=output,
-            file_name=f"{pretty_portfolio_name.replace(' ', '_').lower()}_vs_bucket_stress test_bystrategy.xlsx",
+            file_name=f"{pretty_portfolio_name.replace(' ', '_').lower()}_vs_bucket_stress test.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
