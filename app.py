@@ -28,28 +28,28 @@ def load_corr_data(path):
     return df.set_index(df.columns[0]).sort_index()
 
 
-def load_stress_all(stress_files):
-    dfs = []
+@st.cache_data
+def load_stress_data(path):
+    xls = pd.ExcelFile(path)
+    records = []
 
-    for file in stress_files:
-        df = pd.read_excel(file)
+    for sheet in xls.sheet_names:
+        portfolio, scenario = sheet.split("&&", 1) if "&&" in sheet else (sheet, sheet)
 
+        df = pd.read_excel(xls, sheet_name=sheet)
         df = df.rename(columns={
-            "Sector/Block/Factor": "Strategy",
-            "Stress PnL": "StressPnL",
-            "Date": "Date",
-            "Scenario": "Scenario",
-            "Portfolio": "Portfolio"
+            df.columns[0]: "Date",
+            df.columns[2]: "Scenario",
+            df.columns[4]: "StressPnL"
         })
 
         df["Date"] = pd.to_datetime(df["Date"])
-        df["StressPnL"] = pd.to_numeric(df["StressPnL"], errors="coerce")
+        df["Portfolio"] = portfolio
+        df["ScenarioName"] = scenario
 
-        dfs.append(df)
+        records.append(df[["Date", "Scenario", "StressPnL", "Portfolio", "ScenarioName"]])
 
-    return pd.concat(dfs, ignore_index=True)
-
-
+    return pd.concat(records, ignore_index=True)
 
 
 @st.cache_data
@@ -91,7 +91,7 @@ def pretty_name(x):
 # LOAD DATA
 # ==================================================
 corr = load_corr_data("corrE7X.xlsx")
-stress_all = load_stress_all("stress_test_bystrat.xlsx")
+stress_data = load_stress_data("stress_test_totE7X.xlsx")
 exposure_data = load_exposure_data("E7X_Exposure.xlsx")
 
 # ==================================================
@@ -253,7 +253,7 @@ with tab_stress:
     with col_ctrl:
         st.subheader("Controls")
 
-        dates = sorted(stress_all["Date"].unique())
+        dates = sorted(stress_data["Date"].unique())
         date = pd.to_datetime(
             st.selectbox(
                 "Select date",
@@ -262,7 +262,7 @@ with tab_stress:
             )
         )
 
-        df = stress_all[stress_all["Date"] == date]
+        df = stress_data[stress_data["Date"] == date]
 
         portfolios = df["Portfolio"].unique().tolist()
         sel_ports = st.multiselect(
@@ -282,7 +282,6 @@ with tab_stress:
         )
 
         df = df[df["ScenarioName"].isin(sel_scen)]
-        df = df[df["Strategy"] == "Total"]
 
     with col_plot:
         # ------------------------------
@@ -320,6 +319,24 @@ with tab_stress:
             key="download_stress_pnl"
         )
         
+        @st.cache_data
+        def load_stress_bystrat(path):
+            xls = pd.ExcelFile(path)
+            records = []
+        
+            for sheet in xls.sheet_names:
+                portfolio, scenario = sheet.split("&&", 1) if "&&" in sheet else (sheet, sheet)
+        
+                df = pd.read_excel(xls, sheet_name=sheet)
+                df["Portfolio"] = portfolio
+                df["ScenarioName"] = scenario
+        
+                records.append(df)
+        
+            return pd.concat(records, ignore_index=True)  # <-- qui finisce la funzione
+        
+        # === fuori dalla funzione ===
+        stress_bystrat = load_stress_bystrat("stress_test_bystrat.xlsx")
         
         with st.expander("Expand for Stress Test analysis by strategy", expanded=False):
             
@@ -337,10 +354,10 @@ with tab_stress:
             )
             
             # Filtra dati
-            df_detail = stress_all[
-                (stress_all["Portfolio"] == clicked_portfolio) &
-                (stress_all["ScenarioName"] == clicked_scenario) &
-                (stress_all.iloc[:, 0] != "Total")  # esclude la riga Total
+            df_detail = stress_bystrat[
+                (stress_bystrat["Portfolio"] == clicked_portfolio) &
+                (stress_bystrat["ScenarioName"] == clicked_scenario) &
+                (stress_bystrat.iloc[:, 0] != "Total")  # esclude la riga Total
             ]
             
             if not df_detail.empty:
