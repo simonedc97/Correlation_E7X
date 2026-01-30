@@ -42,8 +42,11 @@ def load_stress_all(path):
         df = df.rename(columns={
             df.columns[0]: "Strategy",
             df.columns[1]: "Scenario",
-            df.columns[2]: "StressPnL"
+            df.columns[2]: "StressPnL",
+            df.columns[3]: "Date"
         })
+        
+        df["Date"] = pd.to_datetime(df["Date"])
 
         df["Portfolio"] = portfolio
         df["ScenarioName"] = scenario
@@ -339,9 +342,9 @@ with tab_stress:
             
             # Filtra dati
             df_detail = stress_all[
-                (stress_bystrat["Portfolio"] == clicked_portfolio) &
-                (stress_bystrat["ScenarioName"] == clicked_scenario) &
-                (stress_bystrat.iloc[:, 0] != "Total")  # esclude la riga Total
+                (stress_all["Portfolio"] == clicked_portfolio) &
+                (stress_all["ScenarioName"] == clicked_scenario) &
+                (stress_all.iloc[:, 0] != "Total")  # esclude la riga Total
             ]
             
             if not df_detail.empty:
