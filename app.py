@@ -53,12 +53,6 @@ def load_stress_data(path):
 
 @st.cache_data
 def load_stress_bystrat(path):
-    """
-    Carica i dati di Stress Test by Strategy da un Excel con più sheet.
-    Ogni sheet contiene i dati di un portfolio e scenario (sheet name = "Portfolio&&Scenario").
-    Restituisce un DataFrame standardizzato con colonne:
-    ['Name', 'Date', 'StressPnL', 'Portfolio', 'ScenarioName'].
-    """
     xls = pd.ExcelFile(path)
     records = []
 
@@ -66,22 +60,32 @@ def load_stress_bystrat(path):
         portfolio, scenario = sheet.split("&&", 1) if "&&" in sheet else (sheet, sheet)
         df = pd.read_excel(xls, sheet_name=sheet)
 
-        # Rinominazione colonne standard
+        # Trova dinamicamente le colonne
+        name_col = df.columns[0]  # normalmente la prima colonna è il nome strategia
+        date_col = df.columns[df.columns.str.contains("Date", case=False, regex=True)][0]
+        pnl_col = df.columns[df.columns.str.contains("Stress", case=False, regex=True)][0]
+
+        # Rinominazione colonne
         df = df.rename(columns={
-            df.columns[0]: "Name",      # strategia
-            df.columns[3]: "Date",
-            df.columns[4]: "StressPnL"  # coerente con l'altra sezione
+            name_col: "Name",
+            date_col: "Date",
+            pnl_col: "StressPnL"
         })
 
-        df["Date"] = pd.to_datetime(df["Date"])
+        # Converti date in datetime senza forzare unicità
+        df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
         df["Portfolio"] = portfolio
         df["ScenarioName"] = scenario
 
         records.append(df[["Name", "Date", "StressPnL", "Portfolio", "ScenarioName"]])
 
+    # Combina tutto senza rimuovere duplicati
     combined = pd.concat(records, ignore_index=True)
+
+    # Ordina per data, portfolio, scenario e strategia
     combined = combined.sort_values(["Date", "Portfolio", "ScenarioName", "Name"])
     return combined
+
 
 
 @st.cache_data
@@ -358,7 +362,7 @@ with tab_stress:
             # --------------------
             # Selezione Data
             # --------------------
-            dates = sorted(stress_bystrat["Date"].unique())
+            dates = sorted(stress_bystrat["Date"].dropna().unique())
             selected_date = pd.to_datetime(
                 st.selectbox(
                     "Select date",
@@ -456,15 +460,18 @@ with tab_stress:
                 # --------------------
                 output = BytesIO()
                 with pd.ExcelWriter(output, engine="openpyxl") as writer:
-                    df_detail.to_excel(writer, sheet_name="Stress Test PnL By Strategy", index=False)
+                    df_detail.to_excel(writer, sheet_name="StressPnL By Strategy", index=False)
+                output.seek(0)
         
                 st.download_button(
-                    label="📥 Download Stress Test PnL By Strategy as Excel",
+                    label="📥 Download StressPnL By Strategy as Excel",
                     data=output.getvalue(),
-                    file_name="stress_test_by_strat.xlsx",
+                    file_name="stress_by_strategy.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     key="download_stress_by_strategy"
                 )
+            else:
+                st.info("No data available for the selected combination of date, portfolio, and scenario.")
 
         # ------------------------------
         # Comparison Analysis
