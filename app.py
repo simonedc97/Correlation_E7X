@@ -428,18 +428,27 @@ with tab_stress:
                 colors = ["white"] + colors
                 texts = [""] + df_tm["StressPnL"].round(2).astype(str).tolist()
         
-                vals = df_tm["StressPnL"].values
-                
-                # Normalizza tra -1 e 1 per la mappatura colori
+                vals = df_detail["Stress PnL"].values
+                # Normalizza tra 0 e 1 per il mapping
                 max_abs = np.max(np.abs(vals)) if np.max(np.abs(vals)) != 0 else 1
-                colors_norm = vals / max_abs  # -1 ... 0 ... 1
-                
-                # Colori diverging: rosso (neg), giallo (zero), verde (pos)
-                colorscale = [
-                    [0.0, "#8B0000"],   # rosso
-                    [0.5, "#FFFF99"],   # giallo
-                    [1.0, "#008000"]    # verde
+                colors = [
+                    f"rgba({int(255*abs(min(0,v)/max_abs))},{int(255*max(0,v)/max_abs)},0,0.8)"
+                    for v in vals
                 ]
+                # In alternativa: rosso = [255,0,0], verde = [0,255,0] proporzionale al valore
+                
+                df_tm = df_detail.copy()
+                df_tm["size"] = df_tm["StressPnL"].abs().clip(lower=0.01)
+                
+                root_label = f"{pretty_name(clicked_portfolio)} - {clicked_scenario}"
+                
+                labels = [root_label] + df_tm.iloc[:, 0].tolist()
+                parents = [""] + [root_label] * len(df_tm)
+                values = [df_tm["size"].sum()] + df_tm["size"].tolist()
+                colors = ["white"] + df_tm["Stress PnL"].tolist()
+                
+                # testo: vuoto per root, valori per le strategy
+                texts = [""] + df_tm["StressPnL"].round(2).astype(str).tolist()
                 
                 fig_detail = go.Figure(
                     go.Treemap(
