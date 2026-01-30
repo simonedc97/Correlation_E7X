@@ -295,6 +295,7 @@ with tab_stress:
         )
 
         df = df[df["ScenarioName"].isin(sel_scen)]
+        df = df[df["Strategy"] == "Total"]
 
     with col_plot:
         # ------------------------------
