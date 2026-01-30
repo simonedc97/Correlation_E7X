@@ -28,7 +28,7 @@ def load_corr_data(path):
     return df.set_index(df.columns[0]).sort_index()
 
 
-def load_stress_all():
+def load_stress_all(stress_files):
     dfs = []
 
     for file in stress_files:
@@ -48,6 +48,7 @@ def load_stress_all():
         dfs.append(df)
 
     return pd.concat(dfs, ignore_index=True)
+
 
 
 
