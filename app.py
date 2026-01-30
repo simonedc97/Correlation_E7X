@@ -290,10 +290,13 @@ with tab_stress:
     with col_ctrl:
         st.subheader("Controls")
 
+        # ------------------------------
+        # Selezione data principale per Stress Test
+        # ------------------------------
         dates = sorted(stress_data["Date"].unique())
         date = pd.to_datetime(
             st.selectbox(
-                "Select date",
+                "Select date",  # label condivisa
                 [d.strftime("%Y/%m/%d") for d in dates],
                 index=len(dates) - 1
             )
@@ -301,6 +304,7 @@ with tab_stress:
 
         df = stress_data[stress_data["Date"] == date]
 
+        # Selezione Portfolios
         portfolios = df["Portfolio"].unique().tolist()
         sel_ports = st.multiselect(
             "Select portfolios",
@@ -308,21 +312,20 @@ with tab_stress:
             default=portfolios,
             format_func=pretty_name
         )
-
         df = df[df["Portfolio"].isin(sel_ports)]
 
+        # Selezione Scenarios
         scenarios = df["ScenarioName"].unique().tolist()
         sel_scen = st.multiselect(
             "Select scenarios",
             scenarios,
             default=scenarios
         )
-
         df = df[df["ScenarioName"].isin(sel_scen)]
 
     with col_plot:
         # ------------------------------
-        # Bar chart
+        # Bar chart principale
         # ------------------------------
         st.subheader("Stress Test PnL")
 
@@ -344,10 +347,10 @@ with tab_stress:
 
         st.plotly_chart(fig, use_container_width=True)
 
+        # Download Excel
         output = BytesIO()
         with pd.ExcelWriter(output, engine="openpyxl") as writer:
             df.to_excel(writer, sheet_name="Stress Test PnL", index=False)
-        
         st.download_button(
             label="📥 Download Stress PnL as Excel",
             data=output.getvalue(),
@@ -355,41 +358,40 @@ with tab_stress:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             key="download_stress_pnl"
         )
-        
 
+        # ------------------------------
+        # Expand for By Strategy Analysis
+        # ------------------------------
         with st.expander("Expand for Stress Test analysis by strategy", expanded=False):
-        
+
             # --------------------
-            # Selezione Data
+            # Selezione data by strategy
             # --------------------
-            dates = sorted(stress_bystrat["Date"].dropna().unique())
+            dates_bystrat = sorted(stress_bystrat["Date"].dropna().unique())
             selected_date = pd.to_datetime(
                 st.selectbox(
-                    "Select date",
-                    [d.strftime("%Y/%m/%d") for d in dates],
-                    index=len(dates) - 1
+                    "Select date",  # stessa label
+                    [d.strftime("%Y/%m/%d") for d in dates_bystrat],
+                    index=len(dates_bystrat) - 1,
+                    key="bystrat_date"  # key unica per evitare duplicati
                 )
             )
-        
-            # --------------------
+
             # Selezione Portfolio
-            # --------------------
             clicked_portfolio = st.selectbox(
                 "Analysis Portfolio",
                 sel_ports,
                 format_func=pretty_name
             )
-        
-            # --------------------
+
             # Selezione Scenario
-            # --------------------
             clicked_scenario = st.selectbox(
                 "Scenario",
                 sel_scen
             )
-        
+
             # --------------------
-            # Filtra dati
+            # Filtra dati per strategia
             # --------------------
             df_detail = stress_bystrat[
                 (stress_bystrat["Date"] == selected_date) &
@@ -397,7 +399,7 @@ with tab_stress:
                 (stress_bystrat["ScenarioName"] == clicked_scenario) &
                 (stress_bystrat["Name"] != "Total")  # esclude la riga Total
             ]
-        
+
             if not df_detail.empty:
                 # --------------------
                 # Prepara colori dinamici
@@ -408,21 +410,21 @@ with tab_stress:
                     f"rgba({int(255*abs(min(0,v)/max_abs))},{int(255*max(0,v)/max_abs)},0,0.8)"
                     for v in vals
                 ]
-        
+
                 df_tm = df_detail.copy()
                 df_tm["size"] = df_tm["StressPnL"].abs().clip(lower=0.01)
-        
+
                 # --------------------
                 # Treemap
                 # --------------------
                 root_label = f"{pretty_name(clicked_portfolio)} - {clicked_scenario} ({selected_date.date()})"
-        
+
                 labels = [root_label] + df_tm["Name"].tolist()
                 parents = [""] + [root_label] * len(df_tm)
                 values = [df_tm["size"].sum()] + df_tm["size"].tolist()
                 colors = ["white"] + df_tm["StressPnL"].tolist()
                 texts = [""] + df_tm["StressPnL"].round(2).astype(str).tolist()
-        
+
                 fig_detail = go.Figure(
                     go.Treemap(
                         labels=labels,
@@ -444,7 +446,7 @@ with tab_stress:
                         branchvalues="total"
                     )
                 )
-        
+
                 fig_detail.update_layout(
                     height=450,
                     template="plotly_white",
@@ -452,17 +454,15 @@ with tab_stress:
                     plot_bgcolor="white",
                     margin=dict(t=10, b=10, l=10, r=10)
                 )
-        
+
                 st.plotly_chart(fig_detail, use_container_width=True)
-        
-                # --------------------
+
                 # Download Excel
-                # --------------------
                 output = BytesIO()
                 with pd.ExcelWriter(output, engine="openpyxl") as writer:
                     df_detail.to_excel(writer, sheet_name="StressPnL By Strategy", index=False)
                 output.seek(0)
-        
+
                 st.download_button(
                     label="📥 Download StressPnL By Strategy as Excel",
                     data=output.getvalue(),
@@ -478,17 +478,12 @@ with tab_stress:
         # ------------------------------
         st.markdown("---")
         st.subheader("Comparison Analysis")
-
-        selected_portfolio = st.selectbox(
-            "Analysis portfolio",
-            sel_ports,
-            index=sel_ports.index("E7X") if "E7X" in sel_ports else 0,
-            format_func=pretty_name
-        )
-
+        
+        # La data qui viene presa dalla selezione principale
+        # (quindi date = sorted(stress_data["Date"].unique()), date = pd.to_datetime(...))
         df_p = df[df["Portfolio"] == selected_portfolio]
         df_b = df[df["Portfolio"] != selected_portfolio]
-
+        
         bucket = (
             df_b.groupby("ScenarioName")["StressPnL"]
             .agg(
@@ -498,11 +493,11 @@ with tab_stress:
             )
             .reset_index()
         )
-
+        
         plot_df = df_p.merge(bucket, on="ScenarioName")
-
+        
         fig = go.Figure()
-
+        
         for _, r in plot_df.iterrows():
             fig.add_trace(go.Scatter(
                 x=[r.q25, r.q75],
@@ -511,7 +506,7 @@ with tab_stress:
                 line=dict(width=14, color="rgba(0,0,255,0.25)"),
                 showlegend=False
             ))
-
+        
         fig.add_trace(go.Scatter(
             x=plot_df["bucket_median"],
             y=plot_df["ScenarioName"],
@@ -519,7 +514,7 @@ with tab_stress:
             name="Bucket median",
             marker=dict(color="blue", size=10)
         ))
-
+        
         fig.add_trace(go.Scatter(
             x=plot_df["StressPnL"],
             y=plot_df["ScenarioName"],
@@ -527,14 +522,15 @@ with tab_stress:
             name=pretty_name(selected_portfolio),
             marker=dict(symbol="star", size=14, color="gold")
         ))
-
+        
         fig.update_layout(
             height=600,
             template="plotly_white",
             xaxis_title="Stress PnL (bps)"
         )
-
+        
         st.plotly_chart(fig, use_container_width=True)
+        
         st.markdown(
             """
             <div style="display: flex; align-items: center;">
@@ -545,17 +541,19 @@ with tab_stress:
             """,
             unsafe_allow_html=True
         )
-
+        
         output = BytesIO()
         plot_df.to_excel(output, index=False)
-
+        output.seek(0)
+        
         pretty_portfolio_name = pretty_name(selected_portfolio)
-
+        
         st.download_button(
             label=f"📥 Download {pretty_portfolio_name} vs Bucket Stress Test as Excel",
-            data=output,
-            file_name=f"{pretty_portfolio_name.replace(' ', '_').lower()}_vs_bucket_stress test.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            data=output.getvalue(),
+            file_name=f"{pretty_portfolio_name.replace(' ', '_').lower()}_vs_bucket_stress_test.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            key="download_comparison_stress_test"
         )
 
 # ==================================================
