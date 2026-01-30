@@ -428,28 +428,34 @@ with tab_stress:
                 colors = ["white"] + colors
                 texts = [""] + df_tm["StressPnL"].round(2).astype(str).tolist()
         
+                vals = df_tm["StressPnL"].values
+                
+                # Normalizza tra -1 e 1 per la mappatura colori
+                max_abs = np.max(np.abs(vals)) if np.max(np.abs(vals)) != 0 else 1
+                colors_norm = vals / max_abs  # -1 ... 0 ... 1
+                
+                # Colori diverging: rosso (neg), giallo (zero), verde (pos)
+                colorscale = [
+                    [0.0, "#8B0000"],   # rosso
+                    [0.5, "#FFFF99"],   # giallo
+                    [1.0, "#008000"]    # verde
+                ]
+                
                 fig_detail = go.Figure(
                     go.Treemap(
                         labels=labels,
                         parents=parents,
                         values=values,
                         marker=dict(
-                            colors=df_tm["StressPnL"],  # usa i valori reali
-                            colorscale=[
-                                [0.0, "#8B0000"],   # rosso scuro per valori negativi grandi
-                                [0.5, "#FFFF99"],   # giallo chiaro per zero
-                                [1.0, "#008000"]    # verde intenso per valori positivi grandi
-                            ],
-                            cmid=0,                 # centra la scala su zero
+                            colors=colors_norm,      # passiamo i valori normalizzati
+                            colorscale=colorscale,
+                            cmid=0,                  # zero al centro
                             line=dict(color="white", width=2)
                         ),
                         text=texts,
                         texttemplate="%{label}<br><b>%{text} bps</b>",
                         textfont=dict(size=14, color="black"),
-                        hovertemplate=(
-                            "<b>%{label}</b><br>"
-                            "Stress PnL: %{color:.2f} bps<extra></extra>"
-                        ),
+                        hovertemplate="<b>%{label}</b><br>Stress PnL: %{color:.2f} bps<extra></extra>",
                         branchvalues="total"
                     )
                 )
@@ -461,7 +467,6 @@ with tab_stress:
                     plot_bgcolor="white",
                     margin=dict(t=10, b=10, l=10, r=10)
                 )
-
 
         
                 st.plotly_chart(fig_detail, use_container_width=True)
