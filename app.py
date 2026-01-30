@@ -34,23 +34,29 @@ def load_stress_data(path):
     records = []
 
     for sheet in xls.sheet_names:
-        portfolio, scenario = sheet.split("&&", 1) if "&&" in sheet else (sheet, sheet)
+        portfolio, scenario_name = sheet.split("&&", 1) if "&&" in sheet else (sheet, sheet)
 
         df = pd.read_excel(xls, sheet_name=sheet)
 
+        # solo riga Total
         df = df[df.iloc[:, 0] == "Total"]
-        
-        df = df.rename(columns={
-            df.columns[13]: "StressPnL"
-        })
 
+        # rinomina Stress PnL
+        df = df.rename(columns={"Stress PnL": "StressPnL"})
+
+        # parsing date
         df["Date"] = pd.to_datetime(df["Date"])
-        df["Portfolio"] = portfolio
-        df["ScenarioName"] = scenario
 
-        records.append(df[["Date", "Scenario", "StressPnL", "Portfolio", "ScenarioName"]])
+        # info dal nome sheet
+        df["PortfolioName"] = portfolio
+        df["ScenarioName"] = scenario_name
+
+        records.append(
+            df[["Date", "Scenario", "StressPnL", "PortfolioName", "ScenarioName"]]
+        )
 
     return pd.concat(records, ignore_index=True)
+
 
 @st.cache_data
 def load_stress_bystrat(path):
