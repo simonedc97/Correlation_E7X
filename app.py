@@ -429,25 +429,18 @@ with tab_stress:
                 texts = [""] + df_tm["StressPnL"].round(2).astype(str).tolist()
         
                 vals = df_detail["StressPnL"].values
-                # Normalizza tra 0 e 1 per il mapping
                 max_abs = np.max(np.abs(vals)) if np.max(np.abs(vals)) != 0 else 1
                 colors = [
                     f"rgba({int(255*abs(min(0,v)/max_abs))},{int(255*max(0,v)/max_abs)},0,0.8)"
                     for v in vals
                 ]
-                # In alternativa: rosso = [255,0,0], verde = [0,255,0] proporzionale al valore
                 
                 df_tm = df_detail.copy()
-                df_tm["size"] = df_tm["StressPnL"].abs().clip(lower=0.01)
-                
-                root_label = f"{pretty_name(clicked_portfolio)} - {clicked_scenario}"
-                
+                df_tm["size"] = df_tm["StressPnL"].abs().clip(lower=0.01)                
                 labels = [root_label] + df_tm.iloc[:, 0].tolist()
                 parents = [""] + [root_label] * len(df_tm)
                 values = [df_tm["size"].sum()] + df_tm["size"].tolist()
                 colors = ["white"] + df_tm["StressPnL"].tolist()
-                
-                # testo: vuoto per root, valori per le strategy
                 texts = [""] + df_tm["StressPnL"].round(2).astype(str).tolist()
                 
                 fig_detail = go.Figure(
