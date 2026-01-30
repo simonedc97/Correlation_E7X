@@ -63,7 +63,7 @@ def load_stress_bystrat(path):
         # Trova dinamicamente le colonne
         name_col = df.columns[0]  # normalmente la prima colonna è il nome strategia
         date_col = df.columns[df.columns.str.contains("Date", case=False, regex=True)][0]
-        pnl_col = df.columns[df.columns.str.contains("Stress", case=False, regex=True)][0]
+        pnl_col = df.columns[df.columns.str.contains("Stress PnL", case=False, regex=True)][0]
 
         # Rinominazione colonne
         df = df.rename(columns={
