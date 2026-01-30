@@ -404,12 +404,16 @@ with tab_stress:
                 # --------------------
                 # Prepara colori dinamici
                 # --------------------
-                vals = df_detail["StressPnL"].values
+
+                vals = df_detail["StressPnL"].fillna(0).values
                 max_abs = np.max(np.abs(vals)) if np.max(np.abs(vals)) != 0 else 1
-                colors = [
-                    f"rgba({int(255*abs(min(0,v)/max_abs))},{int(255*max(0,v)/max_abs)},0,0.8)"
-                    for v in vals
-                ]
+                
+                colors = []
+                for v in vals:
+                    neg = int(np.clip(255 * abs(min(0, v) / max_abs), 0, 255))
+                    pos = int(np.clip(255 * max(0, v) / max_abs, 0, 255))
+                    colors.append(f"rgba({neg},{pos},0,0.8)")
+
 
                 df_tm = df_detail.copy()
                 df_tm["size"] = df_tm["StressPnL"].abs().clip(lower=0.01)
