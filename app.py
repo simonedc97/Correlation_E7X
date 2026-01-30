@@ -27,24 +27,30 @@ def load_corr_data(path):
     df.iloc[:, 0] = pd.to_datetime(df.iloc[:, 0])
     return df.set_index(df.columns[0]).sort_index()
 
+
 @st.cache_data
-def load_stress_bystrat(path):
+def load_stress_data(path):
     xls = pd.ExcelFile(path)
     records = []
 
     for sheet in xls.sheet_names:
         portfolio, scenario = sheet.split("&&", 1) if "&&" in sheet else (sheet, sheet)
+
         df = pd.read_excel(xls, sheet_name=sheet)
+        df = df.rename(columns={
+            df.columns[0]: "Date",
+            df.columns[2]: "Scenario",
+            df.columns[4]: "StressPnL"
+        })
 
-        # Assicuriamoci che la prima colonna (Date) sia datetime
-        df.iloc[:, 0] = pd.to_datetime(df.iloc[:, 0], errors="coerce")
-
+        df["Date"] = pd.to_datetime(df["Date"])
         df["Portfolio"] = portfolio
         df["ScenarioName"] = scenario
 
-        records.append(df)
+        records.append(df[["Date", "Scenario", "StressPnL", "Portfolio", "ScenarioName"]])
 
     return pd.concat(records, ignore_index=True)
+
 
 @st.cache_data
 def load_exposure_data(path):
@@ -85,8 +91,7 @@ def pretty_name(x):
 # LOAD DATA
 # ==================================================
 corr = load_corr_data("corrE7X.xlsx")
-stress_data = load_stress_bystrat("stress_test_bystrat.xlsx")
-stress_bystrat = load_stress_bystrat("stress_test_bystrat.xlsx")
+stress_data = load_stress_data("stress_test_totE7X.xlsx")
 exposure_data = load_exposure_data("E7X_Exposure.xlsx")
 
 # ==================================================
@@ -237,7 +242,6 @@ with tab_corr:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             key="download_summary_stats"
         )
-
 # ==================================================
 # TAB — STRESS TEST
 # ==================================================
@@ -249,19 +253,7 @@ with tab_stress:
     with col_ctrl:
         st.subheader("Controls")
 
-        # ------------------------------
-        # Load data (already cached)
-        # ------------------------------
-        stress_bystrat = load_stress_bystrat("stress_test_bystrat.xlsx")
-
-        # Ensure Date column is datetime
-        stress_bystrat.iloc[:, 0] = pd.to_datetime(stress_bystrat.iloc[:, 0], errors="coerce")
-        stress_bystrat = stress_bystrat.dropna(subset=[stress_bystrat.columns[0]])
-
-        # ------------------------------
-        # Select date
-        # ------------------------------
-        dates = sorted(stress_bystrat.iloc[:, 0].unique())
+        dates = sorted(stress_data["Date"].unique())
         date = pd.to_datetime(
             st.selectbox(
                 "Select date",
@@ -270,44 +262,39 @@ with tab_stress:
             )
         )
 
-        df_date = stress_bystrat[stress_bystrat.iloc[:, 0] == date]
+        df = stress_data[stress_data["Date"] == date]
 
-        # ------------------------------
-        # Select portfolios
-        # ------------------------------
-        portfolios = df_date["Portfolio"].unique().tolist()
+        portfolios = df["Portfolio"].unique().tolist()
         sel_ports = st.multiselect(
             "Select portfolios",
             portfolios,
             default=portfolios,
             format_func=pretty_name
         )
-        df_date = df_date[df_date["Portfolio"].isin(sel_ports)]
 
-        # ------------------------------
-        # Select scenarios
-        # ------------------------------
-        scenarios = df_date["ScenarioName"].unique().tolist()
+        df = df[df["Portfolio"].isin(sel_ports)]
+
+        scenarios = df["ScenarioName"].unique().tolist()
         sel_scen = st.multiselect(
             "Select scenarios",
             scenarios,
             default=scenarios
         )
-        df_date = df_date[df_date["ScenarioName"].isin(sel_scen)]
+
+        df = df[df["ScenarioName"].isin(sel_scen)]
 
     with col_plot:
         # ------------------------------
-        # Total Stress PnL (row 'Total')
+        # Bar chart
         # ------------------------------
-        st.subheader("Stress Test PnL (Total)")
-        df_total = df_date[df_date.iloc[:, 0] == "Total"]
+        st.subheader("Stress Test PnL")
 
         fig = go.Figure()
         for p in sel_ports:
-            d = df_total[df_total["Portfolio"] == p]
+            d = df[df["Portfolio"] == p]
             fig.add_trace(go.Bar(
                 x=d["ScenarioName"],
-                y=d["Stress PnL"],
+                y=d["StressPnL"],
                 name=pretty_name(p)
             ))
 
@@ -320,52 +307,85 @@ with tab_stress:
 
         st.plotly_chart(fig, use_container_width=True)
 
-        # Download total PnL
         output = BytesIO()
         with pd.ExcelWriter(output, engine="openpyxl") as writer:
-            df_total.to_excel(writer, sheet_name="Stress Test PnL Total", index=False)
-
+            df.to_excel(writer, sheet_name="Stress Test PnL", index=False)
+        
         st.download_button(
-            label="📥 Download Stress PnL Total as Excel",
+            label="📥 Download Stress PnL as Excel",
             data=output.getvalue(),
-            file_name="stress_test_pnl_total.xlsx",
+            file_name="stress_test_pnl.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            key="download_stress_pnl_total"
+            key="download_stress_pnl"
         )
-
-        # ------------------------------
-        # Stress PnL by Strategy
-        # ------------------------------
+        
+        @st.cache_data
+        def load_stress_bystrat(path):
+            xls = pd.ExcelFile(path)
+            records = []
+        
+            for sheet in xls.sheet_names:
+                portfolio, scenario = sheet.split("&&", 1) if "&&" in sheet else (sheet, sheet)
+        
+                df = pd.read_excel(xls, sheet_name=sheet)
+                df["Portfolio"] = portfolio
+                df["ScenarioName"] = scenario
+        
+                records.append(df)
+        
+            return pd.concat(records, ignore_index=True)  # <-- qui finisce la funzione
+        
+        # === fuori dalla funzione ===
+        stress_bystrat = load_stress_bystrat("stress_test_bystrat.xlsx")
+        
         with st.expander("Expand for Stress Test analysis by strategy", expanded=False):
+            
+            # Select portfolio
             clicked_portfolio = st.selectbox(
                 "Analysis Portfolio",
                 sel_ports,
                 format_func=pretty_name
             )
-
+            
+            # Select scenario
             clicked_scenario = st.selectbox(
                 "Scenario",
                 sel_scen
             )
-
+            
+            # Filtra dati
             df_detail = stress_bystrat[
                 (stress_bystrat["Portfolio"] == clicked_portfolio) &
                 (stress_bystrat["ScenarioName"] == clicked_scenario) &
-                (stress_bystrat.iloc[:, 0] != "Total")  # exclude 'Total'
+                (stress_bystrat.iloc[:, 0] != "Total")  # esclude la riga Total
             ]
-
+            
             if not df_detail.empty:
-                # Treemap
+                # Colori tipo heatmap: rossi per negativi, verdi per positivi
+                
+                
+                vals = df_detail["Stress PnL"].values
+                # Normalizza tra 0 e 1 per il mapping
+                max_abs = np.max(np.abs(vals)) if np.max(np.abs(vals)) != 0 else 1
+                colors = [
+                    f"rgba({int(255*abs(min(0,v)/max_abs))},{int(255*max(0,v)/max_abs)},0,0.8)"
+                    for v in vals
+                ]
+                # In alternativa: rosso = [255,0,0], verde = [0,255,0] proporzionale al valore
+                
                 df_tm = df_detail.copy()
                 df_tm["size"] = df_tm["Stress PnL"].abs().clip(lower=0.01)
-
+                
                 root_label = f"{pretty_name(clicked_portfolio)} - {clicked_scenario}"
+                
                 labels = [root_label] + df_tm.iloc[:, 0].tolist()
                 parents = [""] + [root_label] * len(df_tm)
                 values = [df_tm["size"].sum()] + df_tm["size"].tolist()
                 colors = ["white"] + df_tm["Stress PnL"].tolist()
+                
+                # testo: vuoto per root, valori per le strategy
                 texts = [""] + df_tm["Stress PnL"].round(2).astype(str).tolist()
-
+                
                 fig_detail = go.Figure(
                     go.Treemap(
                         labels=labels,
@@ -378,13 +398,17 @@ with tab_stress:
                             line=dict(color="white", width=2)
                         ),
                         text=texts,
+                        # 🔥 il root (text="") non mostra nulla
                         texttemplate="%{label}<br><b>%{text} bps</b>",
                         textfont=dict(size=14, color="black"),
-                        hovertemplate="<b>%{label}</b><br>Stress PnL: %{color:.2f} bps<extra></extra>",
+                        hovertemplate=(
+                            "<b>%{label}</b><br>"
+                            "Stress PnL: %{color:.2f} bps<extra></extra>"
+                        ),
                         branchvalues="total"
                     )
                 )
-
+                
                 fig_detail.update_layout(
                     height=450,
                     template="plotly_white",
@@ -392,14 +416,14 @@ with tab_stress:
                     plot_bgcolor="white",
                     margin=dict(t=10, b=10, l=10, r=10)
                 )
-
+                
                 st.plotly_chart(fig_detail, use_container_width=True)
 
-                # Download by strategy
+    
                 output = BytesIO()
                 with pd.ExcelWriter(output, engine="openpyxl") as writer:
                     df_detail.to_excel(writer, sheet_name="Stress Test PnL By Strategy", index=False)
-
+                
                 st.download_button(
                     label="📥 Download Stress Test PnL By Strategy as Excel",
                     data=output.getvalue(),
