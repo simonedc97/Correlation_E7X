@@ -37,6 +37,9 @@ def load_stress_data(path):
         portfolio, scenario = sheet.split("&&", 1) if "&&" in sheet else (sheet, sheet)
 
         df = pd.read_excel(xls, sheet_name=sheet)
+
+        df = df[df.iloc[:, 0] == "Total"]
+        
         df = df.rename(columns={
             df.columns[13]: "StressPnL"
         })
