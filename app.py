@@ -60,8 +60,15 @@ def load_stress_bystrat(path):
         portfolio, scenario = sheet.split("&&", 1) if "&&" in sheet else (sheet, sheet)
 
         df = pd.read_excel(xls, sheet_name=sheet)
+        df = df.rename(columns={
+            df.columns[16]: "StressPnL"
+        })
+
+        df["Date"] = pd.to_datetime(df["Date"])
         df["Portfolio"] = portfolio
         df["ScenarioName"] = scenario
+
+        records.append(df[["Date", "Scenario", "StressPnL", "Portfolio", "ScenarioName"]])
 
         records.append(df)
 
