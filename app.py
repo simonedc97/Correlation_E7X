@@ -502,16 +502,21 @@ with tab_stress:
         # ------------------------------
         st.markdown("---")
         st.subheader("Comparison Analysis")
-
+        
+        # stesso box di Exposure
         selected_portfolio = st.selectbox(
             "Analysis portfolio",
             sel_ports,
             index=sel_ports.index("E7X") if "E7X" in sel_ports else 0,
-            format_func=pretty_name
+            format_func=pretty_name,
+            key="stress_comp_portfolio"
         )
         
-        df_p = df[df["Portfolio"] == clicked_portfolio]
-        df_b = df[df["Portfolio"] != clicked_portfolio]
+        # Portfolio analizzato
+        df_p = df[df["Portfolio"] == selected_portfolio]
+        
+        # Bucket = tutti gli altri
+        df_b = df[df["Portfolio"] != selected_portfolio]
         
         bucket = (
             df_b.groupby("ScenarioName")["StressPnL"]
@@ -527,6 +532,7 @@ with tab_stress:
         
         fig = go.Figure()
         
+        # bande 25–75%
         for _, r in plot_df.iterrows():
             fig.add_trace(go.Scatter(
                 x=[r.q25, r.q75],
@@ -536,6 +542,7 @@ with tab_stress:
                 showlegend=False
             ))
         
+        # mediana bucket
         fig.add_trace(go.Scatter(
             x=plot_df["bucket_median"],
             y=plot_df["ScenarioName"],
@@ -544,11 +551,12 @@ with tab_stress:
             marker=dict(color="blue", size=10)
         ))
         
+        # portfolio selezionato
         fig.add_trace(go.Scatter(
             x=plot_df["StressPnL"],
             y=plot_df["ScenarioName"],
             mode="markers",
-            name=pretty_name(clicked_portfolio),
+            name=pretty_name(selected_portfolio),
             marker=dict(symbol="star", size=14, color="gold")
         ))
         
@@ -576,7 +584,7 @@ with tab_stress:
         plot_df.to_excel(output, index=False)
         output.seek(0)
         
-        pretty_portfolio_name = pretty_name(clicked_portfolio)
+        pretty_portfolio_name = pretty_name(selected_portfolio)
         
         st.download_button(
             label=f"📥 Download {pretty_portfolio_name} vs Bucket Stress Test as Excel",
