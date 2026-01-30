@@ -502,6 +502,13 @@ with tab_stress:
         # ------------------------------
         st.markdown("---")
         st.subheader("Comparison Analysis")
+
+        selected_portfolio = st.selectbox(
+            "Analysis portfolio",
+            sel_ports,
+            index=sel_ports.index("E7X") if "E7X" in sel_ports else 0,
+            format_func=pretty_name
+        )
         
         df_p = df[df["Portfolio"] == clicked_portfolio]
         df_b = df[df["Portfolio"] != clicked_portfolio]
