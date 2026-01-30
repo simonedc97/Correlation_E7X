@@ -447,9 +447,9 @@ with tab_stress:
                         parents=parents,
                         values=values,
                         marker=dict(
-                            colors=colors_norm,      # passiamo i valori normalizzati
-                            colorscale=colorscale,
-                            cmid=0,                  # zero al centro
+                            colors=colors,
+                            colorscale="RdYlGn",
+                            cmid=0,
                             line=dict(color="white", width=2)
                         ),
                         text=texts,
