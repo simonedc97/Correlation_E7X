@@ -37,18 +37,17 @@ def load_stress_data(path):
         portfolio, scenario = sheet.split("&&", 1) if "&&" in sheet else (sheet, sheet)
 
         df = pd.read_excel(xls, sheet_name=sheet)
-
-        df = df[df.iloc[:, 0] == "Total"]
-
-        df = df.iloc[:, [16, 15, 13]]  
-
-        df.columns = ["Date", "Scenario", "StressPnL"]
+        df = df.rename(columns={
+            df.columns[0]: "Date",
+            df.columns[2]: "Scenario",
+            df.columns[4]: "StressPnL"
+        })
 
         df["Date"] = pd.to_datetime(df["Date"])
         df["Portfolio"] = portfolio
         df["ScenarioName"] = scenario
 
-        records.append(df)
+        records.append(df[["Date", "Scenario", "StressPnL", "Portfolio", "ScenarioName"]])
 
     return pd.concat(records, ignore_index=True)
 
@@ -128,7 +127,7 @@ def pretty_name(x):
 # LOAD DATA
 # ==================================================
 corr = load_corr_data("corrE7X.xlsx")
-stress_data = load_stress_data("stress_test_bystrat.xlsx")
+stress_data = load_stress_data("stress_test_totE7X.xlsx")
 stress_bystrat = load_stress_bystrat("stress_test_bystrat.xlsx")
 exposure_data = load_exposure_data("E7X_Exposure.xlsx")
 
