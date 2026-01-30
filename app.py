@@ -428,7 +428,7 @@ with tab_stress:
                 colors = ["white"] + colors
                 texts = [""] + df_tm["StressPnL"].round(2).astype(str).tolist()
         
-                vals = df_detail["Stress PnL"].values
+                vals = df_detail["StressPnL"].values
                 # Normalizza tra 0 e 1 per il mapping
                 max_abs = np.max(np.abs(vals)) if np.max(np.abs(vals)) != 0 else 1
                 colors = [
