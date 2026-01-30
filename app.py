@@ -61,7 +61,7 @@ def load_stress_bystrat(path):
 
         df = pd.read_excel(xls, sheet_name=sheet)
         df = df.rename(columns={
-            df.columns[16]: "StressPnL"
+            df.columns[15]: "StressPnL"
         })
 
         df["Date"] = pd.to_datetime(df["Date"])
