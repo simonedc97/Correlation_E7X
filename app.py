@@ -434,22 +434,34 @@ with tab_stress:
                         parents=parents,
                         values=values,
                         marker=dict(
-                            colors=colors,
+                            colors=df_tm["StressPnL"],   # valori reali
+                            colorscale=[
+                                [0.0, "red"],    # valori più negativi → rosso
+                                [0.5, "yellow"], # zero → giallo
+                                [1.0, "green"]   # valori positivi → verde
+                            ],
+                            cmid=0,             # centra la scala su zero
                             line=dict(color="white", width=2)
                         ),
                         text=texts,
                         texttemplate="%{label}<br><b>%{text} bps</b>",
                         textfont=dict(size=14, color="black"),
-                        hovertemplate="<b>%{label}</b><br>Stress PnL: %{text} bps<extra></extra>",
+                        hovertemplate=(
+                            "<b>%{label}</b><br>"
+                            "Stress PnL: %{color:.2f} bps<extra></extra>"
+                        ),
                         branchvalues="total"
                     )
                 )
-        
+                
                 fig_detail.update_layout(
                     height=450,
                     template="plotly_white",
+                    paper_bgcolor="white",
+                    plot_bgcolor="white",
                     margin=dict(t=10, b=10, l=10, r=10)
                 )
+
         
                 st.plotly_chart(fig_detail, use_container_width=True)
         
