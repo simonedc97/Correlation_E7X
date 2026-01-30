@@ -48,11 +48,11 @@ def load_stress_data(path):
         df["Date"] = pd.to_datetime(df["Date"])
 
         # info dal nome sheet
-        df["PortfolioName"] = portfolio
+        df["Portfolio"] = portfolio
         df["ScenarioName"] = scenario_name
 
         records.append(
-            df[["Date", "Scenario", "StressPnL", "PortfolioName", "ScenarioName"]]
+            df[["Date", "Scenario", "StressPnL", "Portfolio", "ScenarioName"]]
         )
 
     return pd.concat(records, ignore_index=True)
