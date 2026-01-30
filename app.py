@@ -38,9 +38,7 @@ def load_stress_data(path):
 
         df = pd.read_excel(xls, sheet_name=sheet)
         df = df.rename(columns={
-            df.columns[0]: "Date",
-            df.columns[2]: "Scenario",
-            df.columns[4]: "StressPnL"
+            df.columns[13]: "StressPnL"
         })
 
         df["Date"] = pd.to_datetime(df["Date"])
@@ -127,7 +125,7 @@ def pretty_name(x):
 # LOAD DATA
 # ==================================================
 corr = load_corr_data("corrE7X.xlsx")
-stress_data = load_stress_data("stress_test_totE7X.xlsx")
+stress_data = load_stress_data("stress_test_bystrat.xlsx")
 stress_bystrat = load_stress_bystrat("stress_test_bystrat.xlsx")
 exposure_data = load_exposure_data("E7X_Exposure.xlsx")
 
