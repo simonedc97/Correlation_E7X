@@ -28,41 +28,27 @@ def load_corr_data(path):
     return df.set_index(df.columns[0]).sort_index()
 
 
-@st.cache_data
-def load_stress_all(path):
-    xls = pd.ExcelFile(path)
-    records = []
+def load_stress_all():
+    dfs = []
 
-    for sheet in xls.sheet_names:
-        portfolio, scenario = sheet.split("&&", 1) if "&&" in sheet else (sheet, sheet)
+    for file in stress_files:
+        df = pd.read_excel(file)
 
-        df = pd.read_excel(xls, sheet_name=sheet)
+        df = df.rename(columns={
+            "Sector/Block/Factor": "Strategy",
+            "Stress PnL": "StressPnL",
+            "Date": "Date",
+            "Scenario": "Scenario",
+            "Portfolio": "Portfolio"
+        })
 
-        # Rinomina SOLO se necessario
-        cols = list(df.columns)
+        df["Date"] = pd.to_datetime(df["Date"])
+        df["StressPnL"] = pd.to_numeric(df["StressPnL"], errors="coerce")
 
-        rename_map = {}
-        if "Strategy" not in cols:
-            rename_map[cols[0]] = "Strategy"
-        if "StressPnL" not in cols:
-            rename_map[cols[2]] = "StressPnL"
-        if "Date" not in cols:
-            rename_map[cols[3]] = "Date"
+        dfs.append(df)
 
-        df = df.rename(columns=rename_map)
+    return pd.concat(dfs, ignore_index=True)
 
-        # Se ci sono più colonne Date → tieni la prima
-        if isinstance(df["Date"], pd.DataFrame):
-            df["Date"] = df["Date"].iloc[:, 0]
-
-        df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
-
-        df["Portfolio"] = portfolio
-        df["ScenarioName"] = scenario
-
-        records.append(df)
-
-    return pd.concat(records, ignore_index=True)
 
 
 @st.cache_data
