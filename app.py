@@ -445,7 +445,7 @@ with tab_stress:
                 labels = [root_label] + df_tm.iloc[:, 0].tolist()
                 parents = [""] + [root_label] * len(df_tm)
                 values = [df_tm["size"].sum()] + df_tm["size"].tolist()
-                colors = ["white"] + df_tm["Stress PnL"].tolist()
+                colors = ["white"] + df_tm["StressPnL"].tolist()
                 
                 # testo: vuoto per root, valori per le strategy
                 texts = [""] + df_tm["StressPnL"].round(2).astype(str).tolist()
