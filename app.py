@@ -27,21 +27,21 @@ def load_corr_data(path):
     df.iloc[:, 0] = pd.to_datetime(df.iloc[:, 0])
     return df.set_index(df.columns[0]).sort_index()
 
-    @st.cache_data
-    def load_stress_bystrat(path):
-        xls = pd.ExcelFile(path)
-        records = []
-    
-        for sheet in xls.sheet_names:
-            portfolio, scenario = sheet.split("&&", 1) if "&&" in sheet else (sheet, sheet)
-    
-            df = pd.read_excel(xls, sheet_name=sheet)
-            df["Portfolio"] = portfolio
-            df["ScenarioName"] = scenario
-    
-            records.append(df)
-    
-        return pd.concat(records, ignore_index=True)  # <-- qui finisce la funzione
+@st.cache_data
+def load_stress_bystrat(path):
+    xls = pd.ExcelFile(path)
+    records = []
+
+    for sheet in xls.sheet_names:
+        portfolio, scenario = sheet.split("&&", 1) if "&&" in sheet else (sheet, sheet)
+
+        df = pd.read_excel(xls, sheet_name=sheet)
+        df["Portfolio"] = portfolio
+        df["ScenarioName"] = scenario
+
+        records.append(df)
+
+    return pd.concat(records, ignore_index=True)  
 
 @st.cache_data
 def load_exposure_data(path):
