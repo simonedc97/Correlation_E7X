@@ -436,9 +436,9 @@ with tab_stress:
                         marker=dict(
                             colors=df_tm["StressPnL"],   # valori reali
                             colorscale=[
-                                [0.0, "red"],    # valori più negativi → rosso
-                                [0.5, "yellow"], # zero → giallo
-                                [1.0, "green"]   # valori positivi → verde
+                                [-0.5, "red"],    # valori più negativi → rosso
+                                [0, "yellow"], # zero → giallo
+                                [+0.5, "green"]   # valori positivi → verde
                             ],
                             cmid=0,             # centra la scala su zero
                             line=dict(color="white", width=2)
