@@ -434,13 +434,13 @@ with tab_stress:
                         parents=parents,
                         values=values,
                         marker=dict(
-                            colors=df_tm["StressPnL"],   # valori reali
+                            colors=df_tm["StressPnL"],  # usa i valori reali
                             colorscale=[
-                                [-0.5, "red"],    # valori più negativi → rosso
-                                [0, "yellow"], # zero → giallo
-                                [+0.5, "green"]   # valori positivi → verde
+                                [0.0, "#8B0000"],   # rosso scuro per valori negativi grandi
+                                [0.5, "#FFFF99"],   # giallo chiaro per zero
+                                [1.0, "#008000"]    # verde intenso per valori positivi grandi
                             ],
-                            cmid=0,             # centra la scala su zero
+                            cmid=0,                 # centra la scala su zero
                             line=dict(color="white", width=2)
                         ),
                         text=texts,
@@ -461,6 +461,7 @@ with tab_stress:
                     plot_bgcolor="white",
                     margin=dict(t=10, b=10, l=10, r=10)
                 )
+
 
         
                 st.plotly_chart(fig_detail, use_container_width=True)
