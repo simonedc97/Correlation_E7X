@@ -38,15 +38,24 @@ def load_stress_all(path):
 
         df = pd.read_excel(xls, sheet_name=sheet)
 
-        # rinomina colonne in modo robusto
-        df = df.rename(columns={
-            df.columns[0]: "Strategy",
-            df.columns[1]: "Scenario",
-            df.columns[2]: "StressPnL",
-            df.columns[3]: "Date"
-        })
-        
-        df["Date"] = pd.to_datetime(df["Date"])
+        # Rinomina SOLO se necessario
+        cols = list(df.columns)
+
+        rename_map = {}
+        if "Strategy" not in cols:
+            rename_map[cols[0]] = "Strategy"
+        if "StressPnL" not in cols:
+            rename_map[cols[2]] = "StressPnL"
+        if "Date" not in cols:
+            rename_map[cols[3]] = "Date"
+
+        df = df.rename(columns=rename_map)
+
+        # Se ci sono più colonne Date → tieni la prima
+        if isinstance(df["Date"], pd.DataFrame):
+            df["Date"] = df["Date"].iloc[:, 0]
+
+        df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
 
         df["Portfolio"] = portfolio
         df["ScenarioName"] = scenario
@@ -54,7 +63,6 @@ def load_stress_all(path):
         records.append(df)
 
     return pd.concat(records, ignore_index=True)
-
 
 
 @st.cache_data
