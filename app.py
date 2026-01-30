@@ -51,28 +51,6 @@ def load_stress_data(path):
 
     return pd.concat(records, ignore_index=True)
 
-@st.cache_data
-def load_stress_bystrat(path):
-    xls = pd.ExcelFile(path)
-    records = []
-
-    for sheet in xls.sheet_names:
-        portfolio, scenario = sheet.split("&&", 1) if "&&" in sheet else (sheet, sheet)
-
-        df = pd.read_excel(xls, sheet_name=sheet)
-        df = df.rename(columns={
-            df.columns[15]: "StressPnL"
-        })
-
-        df["Date"] = pd.to_datetime(df["Date"])
-        df["Portfolio"] = portfolio
-        df["ScenarioName"] = scenario
-
-        records.append(df[["Date", "Scenario", "StressPnL", "Portfolio", "ScenarioName"]])
-
-        records.append(df)
-
-    return pd.concat(records, ignore_index=True)  # <-- qui finisce la funzione
 
 @st.cache_data
 def load_exposure_data(path):
@@ -114,7 +92,6 @@ def pretty_name(x):
 # ==================================================
 corr = load_corr_data("corrE7X.xlsx")
 stress_data = load_stress_data("stress_test_totE7X.xlsx")
-stress_bystrat = load_stress_bystrat("stress_test_bystrat.xlsx")
 exposure_data = load_exposure_data("E7X_Exposure.xlsx")
 
 # ==================================================
@@ -341,6 +318,25 @@ with tab_stress:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             key="download_stress_pnl"
         )
+        
+        @st.cache_data
+        def load_stress_bystrat(path):
+            xls = pd.ExcelFile(path)
+            records = []
+        
+            for sheet in xls.sheet_names:
+                portfolio, scenario = sheet.split("&&", 1) if "&&" in sheet else (sheet, sheet)
+        
+                df = pd.read_excel(xls, sheet_name=sheet)
+                df["Portfolio"] = portfolio
+                df["ScenarioName"] = scenario
+        
+                records.append(df)
+        
+            return pd.concat(records, ignore_index=True)  # <-- qui finisce la funzione
+        
+        # === fuori dalla funzione ===
+        stress_bystrat = load_stress_bystrat("stress_test_bystrat.xlsx")
         
         with st.expander("Expand for Stress Test analysis by strategy", expanded=False):
             
